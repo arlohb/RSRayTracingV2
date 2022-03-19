@@ -65,12 +65,12 @@ impl epi::App for TemplateApp {
     _frame: &epi::Frame,
     _storage: Option<&dyn epi::Storage>,
   ) {
-      ctx.set_style({
-        let mut style: egui::Style = (*ctx.style()).clone();
-        style.visuals = egui::Visuals::dark();
-        style
-      });
-      self.texture = Some(ctx.load_texture("canvas", self.image.clone()));
+    ctx.set_style({
+      let mut style: egui::Style = (*ctx.style()).clone();
+      style.visuals = egui::Visuals::dark();
+      style
+    });
+    self.texture = Some(ctx.load_texture("canvas", self.image.clone()));
   }
 
   /// Called each time the UI needs repainting, which may be many times per second.
