@@ -25,10 +25,15 @@ impl epi::App for TemplateApp {
   /// Called once before the first frame.
   fn setup(
     &mut self,
-    _ctx: &egui::Context,
+    ctx: &egui::Context,
     _frame: &epi::Frame,
     _storage: Option<&dyn epi::Storage>,
   ) {
+      ctx.set_style({
+        let mut style: egui::Style = (*ctx.style()).clone();
+        style.visuals = egui::Visuals::dark();
+        style
+      });
   }
 
   /// Called each time the UI needs repainting, which may be many times per second.
