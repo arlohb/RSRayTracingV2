@@ -1,9 +1,6 @@
 #!/bin/bash
 set -eu
 
-# Starts a local web-server that serves the contents of the `doc/` folder,
-# which is the folder to where the web version is compiled.
-
 cargo install basic-http-server
 
 # https://stackoverflow.com/questions/21336126/linux-bash-script-to-extract-ip-address
