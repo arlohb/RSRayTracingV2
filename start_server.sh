@@ -6,7 +6,8 @@ set -eu
 
 cargo install basic-http-server
 
-echo "open http://localhost:8080"
+# https://stackoverflow.com/questions/21336126/linux-bash-script-to-extract-ip-address
+my_ip=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
 
-(cd docs && basic-http-server --addr 127.0.0.1:8080 .)
-# (cd docs && python3 -m http.server 8080 --bind 127.0.0.1)
+cd docs
+basic-http-server --addr "${my_ip}:8080" .
