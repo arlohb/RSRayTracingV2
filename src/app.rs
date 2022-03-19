@@ -86,6 +86,8 @@ impl epi::App for TemplateApp {
     let previous_frame_time = frame.info().cpu_usage.unwrap_or(0.);
     frame_times.add(ctx.input().time, previous_frame_time);
 
+    let mut has_size_changed = false;
+
     egui::SidePanel::right("settings_panel").show(ctx, |ui| {
       ui.heading("Settings");
 
@@ -94,14 +96,23 @@ impl epi::App for TemplateApp {
       ui.separator();
 
       ui.horizontal(|ui| {
+        let mut new_width = ray_tracer.width;
+        let mut new_height = ray_tracer.height;
+
         ui.label("width: ");
-        ui.add(egui::DragValue::new(&mut ray_tracer.width)
+        ui.add(egui::DragValue::new(&mut new_width)
           .speed(20));
         ui.label("height: ");
-        ui.add(egui::DragValue::new(&mut ray_tracer.height)
+        ui.add(egui::DragValue::new(&mut new_height)
           .speed(20));
 
         ui.separator();
+
+        if new_width != ray_tracer.width || new_height != ray_tracer.height {
+          has_size_changed = true;
+          ray_tracer.width = new_width;
+          ray_tracer.height = new_height;
+        }
       });
     });
 
@@ -141,10 +152,19 @@ impl epi::App for TemplateApp {
     egui::CentralPanel::default().show(ctx, |ui| {
       match texture {
         Some(texture) => {
-          ray_tracer.rs_render(image);
+          egui::Resize::default()
+            .default_size((ray_tracer.width as f32, ray_tracer.height as f32))
+            .show(ui, |ui| {
+              if !has_size_changed {
+                ray_tracer.width = ui.available_width() as u32;
+                ray_tracer.height = ui.available_height() as u32;
+              }
 
-          texture.set(eframe::epaint::ImageData::Color(image.clone()));
-          ui.add(egui::Image::new(&*texture, texture.size_vec2()));
+              ray_tracer.rs_render(image);
+
+              texture.set(eframe::epaint::ImageData::Color(image.clone()));
+              ui.add(egui::Image::new(&*texture, texture.size_vec2()));
+            });
         },
         None => (),
       }
