@@ -1,5 +1,3 @@
-#![cfg_attr(not(debug_assertions), deny(warnings))] // Forbid warnings in release builds
-
 mod app;
 pub use app::TemplateApp;
 

@@ -40,13 +40,13 @@ impl Default for TemplateApp {
           ],
           vec![
             Light::Direction {
-              intensity: (1., 1., 1.),
-              direction: Vec3 { x: 1., y: 1., z: 1. }.normalize(),
+              intensity: (0.8, 0.8, 0.8),
+              direction: Vec3 { x: -1., y: 1.5, z: -0.5 }.normalize(),
             },
           ],
         )
       },
-      frame_times: egui::util::History::new(0..200, 5.),
+      frame_times: egui::util::History::new(0..usize::MAX, 20.),
       image: eframe::epaint::ColorImage::new([width as usize, height as usize], eframe::epaint::Color32::BLACK),
       texture: None,
     }
@@ -55,7 +55,7 @@ impl Default for TemplateApp {
 
 impl epi::App for TemplateApp {
   fn name(&self) -> &str {
-    "eframe template"
+    "RSRayTracingV2"
   }
 
   /// Called once before the first frame.
