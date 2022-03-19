@@ -138,6 +138,10 @@ impl RayTracer {
       height: self.height,
     };
 
+    if image.width() != self.width as usize || image.height() != self.height as usize {
+      *image = eframe::epaint::ColorImage::new([self.width as usize, self.height as usize], eframe::epaint::Color32::BLACK);
+    }
+
     let image_plane = camera.get_image_plane();
 
     // working for this in whiteboard

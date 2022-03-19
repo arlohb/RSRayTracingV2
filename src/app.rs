@@ -86,12 +86,27 @@ impl epi::App for TemplateApp {
     let previous_frame_time = frame.info().cpu_usage.unwrap_or(0.);
     frame_times.add(ctx.input().time, previous_frame_time);
 
-    ray_tracer.rs_render(image);
-
-    egui::SidePanel::right("side_panel").show(ctx, |ui| {
-      ui.heading("Inspector");
+    egui::SidePanel::right("settings_panel").show(ctx, |ui| {
+      ui.heading("Settings");
 
       ui.label(format!("fps: {}", 1. / frame_times.average().unwrap_or(1.)));
+
+      ui.separator();
+
+      ui.horizontal(|ui| {
+        ui.label("width: ");
+        ui.add(egui::DragValue::new(&mut ray_tracer.width)
+          .speed(20));
+        ui.label("height: ");
+        ui.add(egui::DragValue::new(&mut ray_tracer.height)
+          .speed(20));
+
+        ui.separator();
+      });
+    });
+
+    egui::SidePanel::right("object_panel").show(ctx, |ui| {
+      ui.heading("Objects");
 
       if ui.add(egui::Button::new("Add sphere")).clicked() {
         ray_tracer.scene.0.push(Sphere {
@@ -126,6 +141,8 @@ impl epi::App for TemplateApp {
     egui::CentralPanel::default().show(ctx, |ui| {
       match texture {
         Some(texture) => {
+          ray_tracer.rs_render(image);
+
           texture.set(eframe::epaint::ImageData::Color(image.clone()));
           ui.add(egui::Image::new(&*texture, texture.size_vec2()));
         },
