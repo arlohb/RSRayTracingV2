@@ -64,7 +64,7 @@ impl RayTracer {
     let mut min_hit_object: Option<&Sphere> = None;
 
     for object in &self.scene.0 {
-      let distance = match object.intersect(&ray) {
+      let distance = match object.intersect(ray) {
         Some(d) => d,
         None => continue
       };
@@ -127,7 +127,7 @@ impl RayTracer {
     }
   }
 
-  pub fn rs_render(&self, image: &mut eframe::epaint::ColorImage) -> () {
+  pub fn rs_render(&self, image: &mut eframe::epaint::ColorImage) {
     let camera = Camera {
       from: self.from,
       to: self.to,
