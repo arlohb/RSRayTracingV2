@@ -127,7 +127,7 @@ impl RayTracer {
     }
   }
 
-  pub fn rs_render(&self) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+  pub fn rs_render(&self, image: &mut eframe::epaint::ColorImage) -> () {
     let camera = Camera {
       from: self.from,
       to: self.to,
@@ -145,20 +145,26 @@ impl RayTracer {
     let height_world_space = (image_plane.top - image_plane.bottom).length();
     let (right, up, _) = camera.get_vectors();
     
-    let mut image = vec![0u8; (self.width * self.height * 4u32) as usize];
+    // let mut image = vec![0u8; (self.width * self.height * 4u32) as usize];
 
     for x in 0..self.width {
       for y in 0..self.height {
         let pixel = self.render_pixel(x, y, top_left_point, width_world_space, height_world_space, right, up, &camera);
 
-        let index = 4 * (x + (y * self.width)) as usize;
-        image[index] = (pixel.0 * 255.) as u8;
-        image[index + 1] = (pixel.1 * 255.) as u8;
-        image[index + 2] = (pixel.2 * 255.) as u8;
-        image[index + 3] = 255;
+        // let index = 4 * (x + (y * self.width)) as usize;
+        // image[index] = (pixel.0 * 255.) as u8;
+        // image[index + 1] = (pixel.1 * 255.) as u8;
+        // image[index + 2] = (pixel.2 * 255.) as u8;
+        // image[index + 3] = 255;
+
+        let index = (x + (y * self.width)) as usize;
+
+        image.pixels[index] = eframe::epaint::Color32::from_rgb(
+          (pixel.0 * 255.) as u8,
+          (pixel.1 * 255.) as u8,
+          (pixel.2 * 255.) as u8,
+        );
       }
     }
-
-    Ok(image)
   }
 }

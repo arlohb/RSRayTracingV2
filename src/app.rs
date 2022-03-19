@@ -11,17 +11,22 @@ use crate::{
 
 pub struct TemplateApp {
   ray_tracer: RayTracer,
+  image: eframe::epaint::ColorImage,
+  texture: Option<eframe::epaint::TextureHandle>,
+  frame_times: egui::util::History<f32>,
 }
 
 impl Default for TemplateApp {
   fn default() -> Self {
+    let width = 400;
+    let height = 300;
     Self {
       ray_tracer: RayTracer {
         from: Vec3 { x: 5., y: 5., z: 5. },
         to: Vec3 { x: 0., y: 0., z: 0. },
         fov: 70.,
-        width: 400,
-        height: 300,
+        width,
+        height,
         scene: (
           vec![
             Sphere {
@@ -40,7 +45,10 @@ impl Default for TemplateApp {
             },
           ],
         )
-      }
+      },
+      frame_times: egui::util::History::new(0..200, 5.),
+      image: eframe::epaint::ColorImage::new([width as usize, height as usize], eframe::epaint::Color32::BLACK),
+      texture: None,
     }
   }
 }
@@ -62,16 +70,28 @@ impl epi::App for TemplateApp {
         style.visuals = egui::Visuals::dark();
         style
       });
+      self.texture = Some(ctx.load_texture("canvas", self.image.clone()));
   }
 
   /// Called each time the UI needs repainting, which may be many times per second.
   /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
-  fn update(&mut self, ctx: &egui::Context, _frame: &epi::Frame) {
-    let Self { ray_tracer } = self;
-    let image = ray_tracer.rs_render().expect("Rendering failed");
+  fn update(&mut self, ctx: &egui::Context, frame: &epi::Frame) {
+    let Self {
+      ray_tracer,
+      frame_times,
+      image,
+      texture,
+    } = self;
+
+    let previous_frame_time = frame.info().cpu_usage.unwrap_or(0.);
+    frame_times.add(ctx.input().time, previous_frame_time);
+
+    ray_tracer.rs_render(image);
 
     egui::SidePanel::right("side_panel").show(ctx, |ui| {
       ui.heading("Inspector");
+
+      ui.label(format!("fps: {}", 1. / frame_times.average().unwrap_or(1.)));
 
       if ui.add(egui::Button::new("Add sphere")).clicked() {
         ray_tracer.scene.0.push(Sphere {
@@ -104,10 +124,15 @@ impl epi::App for TemplateApp {
     });
 
     egui::CentralPanel::default().show(ctx, |ui| {
-      let colour_image = eframe::epaint::ColorImage::from_rgba_unmultiplied([ray_tracer.width as usize, ray_tracer.height as usize], &image as &[u8]);
-      let image = egui::ImageData::Color(colour_image);
-      let texture = ctx.load_texture("name", image);
-      ui.add(egui::Image::new(&texture, texture.size_vec2()));
+      match texture {
+        Some(texture) => {
+          texture.set(eframe::epaint::ImageData::Color(image.clone()));
+          ui.add(egui::Image::new(&*texture, texture.size_vec2()));
+        },
+        None => (),
+      }
     });
+
+    ctx.request_repaint();
   }
 }
