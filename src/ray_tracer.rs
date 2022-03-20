@@ -6,7 +6,7 @@ use crate::{
   objects::{
     Light,
     Material,
-    Sphere,
+    Object,
   },
   camera::Camera,
   ray::Ray,
@@ -21,7 +21,7 @@ pub struct RayTracer {
   pub fov: f64,
   pub width: u32,
   pub height: u32,
-  pub scene: (Vec<Sphere>, Vec<Light>),
+  pub scene: (Vec<Object>, Vec<Light>),
 }
 
 impl RayTracer {
@@ -30,7 +30,7 @@ impl RayTracer {
     point: Vec3,
     normal: Vec3,
     camera_pos: Vec3,
-    material: Material,
+    material: &Material,
   ) -> (f64, f64, f64) {
     let mut result = (
       AMBIENT_LIGHT.0,
@@ -62,12 +62,12 @@ impl RayTracer {
   fn trace_ray(
     &self,
     ray: &Ray,
-  ) -> Option<(Sphere, Vec3)> {
+  ) -> Option<(&Object, Vec3)> {
     let mut min_hit_distance = 1e9;
-    let mut min_hit_object: Option<&Sphere> = None;
+    let mut min_hit_object: Option<&Object> = None;
 
     for object in &self.scene.0 {
-      let distance = match object.intersect(ray) {
+      let distance = match object.geometry.intersect(ray) {
         Some(d) => d,
         None => continue
       };
@@ -82,7 +82,7 @@ impl RayTracer {
       Some(object) => {
         let hit_point = ray.origin + (ray.direction * min_hit_distance);
 
-        Some((*object, hit_point))
+        Some((object, hit_point))
       }
       None => None
     }
@@ -117,9 +117,9 @@ impl RayTracer {
 
     match self.trace_ray(&ray) {
       Some((object, hit_point)) => {
-        let normal = object.normal_at_point(hit_point);
+        let normal = object.geometry.normal_at_point(hit_point);
 
-        let brightness = self.calculate_light(hit_point, normal, camera.from, object.material);
+        let brightness = self.calculate_light(hit_point, normal, camera.from, &object.material);
         (
             brightness.0 * object.material.colour.0,
             brightness.1 * object.material.colour.1,

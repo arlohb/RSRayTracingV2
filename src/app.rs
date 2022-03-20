@@ -4,8 +4,9 @@ use crate::{
   vec3::Vec3,
   objects::{
     Light,
-    Sphere,
     Material,
+    Geometry,
+    Object,
   }
 };
 
@@ -29,12 +30,15 @@ impl Default for TemplateApp {
         height,
         scene: (
           vec![
-            Sphere {
-              center: Vec3 { x: 0., y: 0., z: 0., },
-              radius: 1.,
+            Object {
+              name: String::from("sphere"),
               material: Material {
                 colour: (1., 0., 0.),
                 specular: 500.,
+              },
+              geometry: Geometry::Sphere {
+                center: Vec3 { x: 0., y: 0., z: 0., },
+                radius: 1.,
               },
             },
           ],
@@ -123,12 +127,15 @@ impl epi::App for TemplateApp {
       ui.heading("Objects");
 
       if ui.add(egui::Button::new("Add sphere")).clicked() {
-        ray_tracer.scene.0.push(Sphere {
-          center: Vec3 { x: 0., y: 0., z: 0., },
-          radius: 1.,
+        ray_tracer.scene.0.push(Object {
+          name: String::from("sphere"),
           material: Material {
-            colour: (1., 1., 1.),
+            colour: (1., 0., 0.),
             specular: 500.,
+          },
+          geometry: Geometry::Sphere {
+            center: Vec3 { x: 0., y: 0., z: 0., },
+            radius: 1.,
           },
         });
       }
@@ -137,13 +144,17 @@ impl epi::App for TemplateApp {
 
       for object in &mut ray_tracer.scene.0 {
         ui.horizontal(|ui| {
-          ui.add(egui::DragValue::new(&mut object.center.x)
+          let position = match &mut object.geometry {
+            Geometry::Sphere { center, radius: _ } => center,
+          };
+
+          ui.add(egui::DragValue::new(&mut position.x)
             .fixed_decimals(1usize)
             .speed(0.1));
-          ui.add(egui::DragValue::new(&mut object.center.y)
+          ui.add(egui::DragValue::new(&mut position.y)
             .fixed_decimals(1usize)
             .speed(0.1));
-          ui.add(egui::DragValue::new(&mut object.center.z)
+          ui.add(egui::DragValue::new(&mut position.z)
             .fixed_decimals(1usize)
             .speed(0.1));
         });
