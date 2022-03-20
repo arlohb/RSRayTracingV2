@@ -7,10 +7,17 @@ use crate::{
     Material,
     Object,
   },
-  camera::Camera,
   ray::Ray,
   scene::Scene,
 };
+
+pub struct ImagePlane {
+  pub left: Vec3,
+  pub right: Vec3,
+  pub bottom: Vec3,
+  pub top: Vec3,
+  pub center: Vec3,
+}
 
 pub struct Hit<'a> {
   pub distance: f64,
@@ -28,6 +35,41 @@ pub struct RayTracer {
 }
 
 impl RayTracer {
+  fn get_camera_vectors(&self) -> (Vec3, Vec3, Vec3) {
+    let forward = (self.from - self.to).normalize();
+
+    let temp = Vec3 { x: 0., y: 1., z: 0. };
+    let right = (temp.normalize() * forward).normalize();
+
+    let up = (forward * right).normalize();
+
+    (right, up, forward)
+  }
+
+  fn get_image_plane(&self, aspect_ratio: f64) -> ImagePlane {
+    // working for this is in whiteboard
+    let fov_rad = self.fov * (std::f64::consts::PI / 180.);
+    let width = 2. * f64::tan(fov_rad / 2.);
+    let half_width = width / 2.;
+
+    let height = width * aspect_ratio;
+    let half_height = height / 2.;
+
+    let (right, up, forward) = self.get_camera_vectors();
+
+    // the image plane is 1 unit away from the camera
+    // this is - not + because the camera point in the -forward direction
+    let center = self.from - forward;
+
+    ImagePlane {
+      left: center - (right * half_width),
+      right: center + (right * half_width),
+      bottom: center - (up * half_height),
+      top: center + (up * half_height),
+      center,
+    }
+  }
+
   fn reflect_ray(ray: Vec3, surface_normal: Vec3) -> Vec3 {
     (surface_normal * surface_normal.dot(ray)) * 2. - ray
   }
@@ -118,14 +160,13 @@ impl RayTracer {
   fn trace_ray(
     &self,
     ray: &Ray,
-    camera: &Camera,
     depth: u32,
   ) -> (f64, f64, f64) {
     match self.ray_hit(&ray) {
       Some((object, hit_point)) => {
         let normal = object.geometry.normal_at_point(hit_point);
 
-        let brightness = self.calculate_light(hit_point, normal, camera.from, &object.material);
+        let brightness = self.calculate_light(hit_point, normal, self.from, &object.material);
         let local_colour = (
             brightness.0 * object.material.colour.0,
             brightness.1 * object.material.colour.1,
@@ -140,7 +181,7 @@ impl RayTracer {
           origin: hit_point,
           direction: RayTracer::reflect_ray(-ray.direction, normal),
         };
-        let reflected_colour = self.trace_ray(&reflection_ray, camera, depth + 1);
+        let reflected_colour = self.trace_ray(&reflection_ray, depth + 1);
 
         (
           local_colour.0 * (1. - object.material.metallic) + reflected_colour.0 * object.material.metallic,
@@ -161,7 +202,6 @@ impl RayTracer {
     height_world_space: f64,
     right: Vec3,
     up: Vec3,
-    camera: &Camera,
   ) -> (f64, f64, f64) {
     let x_screen_space = (x as f64 + 0.5) / self.width as f64;
     let y_screen_space = (y as f64 + 0.5) / self.height as f64;
@@ -172,44 +212,36 @@ impl RayTracer {
 
     let pixel_world_space = top_left + x_offset + y_offset;
 
-    let direction = (pixel_world_space - camera.from).normalize();
+    let direction = (pixel_world_space - self.from).normalize();
 
     let ray = Ray {
-      origin: camera.from,
+      origin: self.from,
       direction
     };
 
-    self.trace_ray(&ray, camera, 0)
+    self.trace_ray(&ray, 0)
   }
 
   pub fn rs_render(&self, image: &mut eframe::epaint::ColorImage) {
-    let camera = Camera {
-      from: self.from,
-      to: self.to,
-      fov: self.fov,
-      width: self.width,
-      height: self.height,
-    };
-
     if image.width() != self.width as usize || image.height() != self.height as usize {
       *image = eframe::epaint::ColorImage::new([self.width as usize, self.height as usize], eframe::epaint::Color32::BLACK);
     }
 
-    let image_plane = camera.get_image_plane();
+    let image_plane = self.get_image_plane(self.height as f64 / self.width as f64);
 
     // working for this in whiteboard
     let top_left_point = image_plane.left + image_plane.top - image_plane.center;
 
     let width_world_space = (image_plane.right - image_plane.left).length();
     let height_world_space = (image_plane.top - image_plane.bottom).length();
-    let (right, up, _) = camera.get_vectors();
+    let (right, up, _) = self.get_camera_vectors();
 
     #[cfg(not(target_arch = "wasm32"))]
     image.pixels.par_iter_mut().enumerate().for_each(|(index, colour)| {
       let y = (index as u32) / (self.width as u32);
       let x = index as u32 % self.width;
 
-      let pixel = self.render_pixel(x, y, top_left_point, width_world_space, height_world_space, right, up, &camera);
+      let pixel = self.render_pixel(x, y, top_left_point, width_world_space, height_world_space, right, up);
 
       *colour = eframe::epaint::Color32::from_rgb(
         (pixel.0 * 255.) as u8,
@@ -223,7 +255,7 @@ impl RayTracer {
       let y = (index as u32) / (self.width as u32);
       let x = index as u32 % self.width;
 
-      let pixel = self.render_pixel(x, y, top_left_point, width_world_space, height_world_space, right, up, &camera);
+      let pixel = self.render_pixel(x, y, top_left_point, width_world_space, height_world_space, right, up);
 
       *colour = eframe::epaint::Color32::from_rgb(
         (pixel.0 * 255.) as u8,

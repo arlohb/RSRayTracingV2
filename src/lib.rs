@@ -3,7 +3,6 @@ pub use app::TemplateApp;
 
 mod ray_tracer;
 mod vec3;
-mod camera;
 mod ray;
 mod objects;
 mod solver;
