@@ -42,13 +42,23 @@ impl RayTracer {
     );
 
     for light in self.scene.lights.iter() {
-      let intensity = light.intensity(point);
-      let vec_to_light = light.vec_to_light(point);
+      let point_to_light = light.point_to_light(point);
 
-      let strength = (normal.dot(vec_to_light)
-        / (normal.length() * vec_to_light.length())).clamp(0., 1.);
+      match self.trace_ray(&Ray {
+        origin: point,
+        direction: point_to_light.normalize(),
+      }) {
+        Some((_object, _point)) => continue,
+        None => (),
+      }
+
+
+      let intensity = light.intensity(point);
+
+      let strength = (normal.dot(point_to_light)
+        / (normal.length() * point_to_light.length())).clamp(0., 1.);
       
-      let reflection_vector = (normal * normal.dot(vec_to_light)) * 2. - vec_to_light;
+      let reflection_vector = (normal * normal.dot(point_to_light)) * 2. - point_to_light;
       let camera_vector = camera_pos - point;
 
       let specular = (reflection_vector.dot(camera_vector)
@@ -71,6 +81,7 @@ impl RayTracer {
     for object in &self.scene.objects {
       match object.geometry.intersect(ray) {
         Some((distance, hit_point)) => {
+          if distance < 1e-6 { continue }
           match &hit {
             Some(h) => {
               if distance < h.distance {

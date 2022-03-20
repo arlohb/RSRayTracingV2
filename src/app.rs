@@ -99,19 +99,19 @@ impl Default for TemplateApp {
                 specular: 50.,
               },
               geometry: Geometry::Plane {
-                center: Vec3 { x: 0., y: 0., z: 0. },
+                center: Vec3 { x: 0., y: -1.5, z: 0. },
                 normal: Vec3 { x: 0., y: 1., z: 0. },
                 size: 5.,
               },
             },
         ],
           lights: vec![
-            // Light::Direction {
-            //   intensity: (0.8, 0.8, 0.8),
-            //   direction: Vec3 { x: -1., y: -1.5, z: -0.5 }.normalize(),
-            // },
+            Light::Direction {
+              intensity: (0.4, 0.4, 0.4),
+              direction: Vec3 { x: -1., y: -1.5, z: -0.5 }.normalize(),
+            },
             Light::Point {
-              intensity: (0.8, 0.8, 0.8),
+              intensity: (0.4, 0.4, 0.4),
               position: Vec3 { x: 0., y: 2., z: 0., },
             },
           ],
