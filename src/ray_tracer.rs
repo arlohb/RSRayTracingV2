@@ -12,6 +12,12 @@ use crate::{
   scene::Scene,
 };
 
+pub struct Hit<'a> {
+  pub distance: f64,
+  pub point: Vec3,
+  pub object: &'a Object,
+}
+
 pub struct RayTracer {
   pub from: Vec3,
   pub to: Vec3,
@@ -60,28 +66,37 @@ impl RayTracer {
     &self,
     ray: &Ray,
   ) -> Option<(&Object, Vec3)> {
-    let mut min_hit_distance = 1e9;
-    let mut min_hit_object: Option<&Object> = None;
+    let mut hit: Option<Hit> = None;
 
     for object in &self.scene.objects {
-      let distance = match object.geometry.intersect(ray) {
-        Some(d) => d,
+      match object.geometry.intersect(ray) {
+        Some((distance, hit_point)) => {
+          match &hit {
+            Some(h) => {
+              if distance < h.distance {
+                hit = Some(Hit {
+                  distance,
+                  point: hit_point,
+                  object,
+                });
+              }
+            },
+            None => {
+              hit = Some(Hit {
+                distance,
+                point: hit_point,
+                object,
+              });
+            }
+          }
+        },
         None => continue
-      };
-
-      if distance < min_hit_distance {
-        min_hit_distance = distance;
-        min_hit_object = Some(object);
-      }
+      };      
     }
 
-    match min_hit_object {
-      Some(object) => {
-        let hit_point = ray.origin + (ray.direction * min_hit_distance);
-
-        Some((object, hit_point))
-      }
-      None => None
+    match &hit {
+      Some(h) => Some((h.object, h.point)),
+      None => None,
     }
   }
 

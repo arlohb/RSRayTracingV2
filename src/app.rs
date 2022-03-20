@@ -92,6 +92,18 @@ impl Default for TemplateApp {
                     radius: 1.0,
                 },
             },
+            Object {
+              name: "plane".to_string(),
+              material: Material {
+                colour: (0.8, 0.8, 1.),
+                specular: 50.,
+              },
+              geometry: Geometry::Plane {
+                center: Vec3 { x: 0., y: 0., z: 0. },
+                normal: Vec3 { x: 0., y: 1., z: 0. },
+                size: 5.,
+              },
+            },
         ],
           lights: vec![
             // Light::Direction {
@@ -189,7 +201,7 @@ impl epi::App for TemplateApp {
 
     let object_panel = |ui: &mut egui::Ui| {
       ui.horizontal(|ui| {
-        if ui.add(egui::Button::new("Add sphere")).clicked() {
+        if ui.add(egui::Button::new("➕ Sphere")).clicked() {
           ray_tracer.scene.objects.push(Object {
             name: String::from("sphere"),
             material: Material {
@@ -199,6 +211,20 @@ impl epi::App for TemplateApp {
             geometry: Geometry::Sphere {
               center: Vec3 { x: 0., y: 0., z: 0., },
               radius: 1.,
+            },
+          });
+        }
+        if ui.add(egui::Button::new("➕ Plane")).clicked() {
+          ray_tracer.scene.objects.push(Object {
+            name: String::from("plane"),
+            material: Material {
+              colour: (1., 0., 0.),
+              specular: 500.,
+            },
+            geometry: Geometry::Plane {
+              center: Vec3 { x: 0., y: 0., z: 0., },
+              normal: Vec3 { x: 0., y: 1., z: 0., },
+              size: 5.,
             },
           });
         }
@@ -214,19 +240,21 @@ impl epi::App for TemplateApp {
       for i in 0..ray_tracer.scene.objects.len() {
         let index = if has_removed_object { i - 1 } else { i };
 
+        ui.label(&ray_tracer.scene.objects[index].name);
+
         ui.horizontal(|ui| {
           ui.label("Pos: ");
 
           let position = ray_tracer.scene.objects[index].geometry.position_as_mut();
 
           ui.add(egui::DragValue::new(&mut position.x)
-            .fixed_decimals(1usize)
+            .fixed_decimals(1)
             .speed(0.1));
           ui.add(egui::DragValue::new(&mut position.y)
-            .fixed_decimals(1usize)
+            .fixed_decimals(1)
             .speed(0.1));
           ui.add(egui::DragValue::new(&mut position.z)
-            .fixed_decimals(1usize)
+            .fixed_decimals(1)
             .speed(0.1));
           
           if ui.add(egui::Button::new("❌")).clicked() {
@@ -240,6 +268,40 @@ impl epi::App for TemplateApp {
         }
 
         let object = &mut ray_tracer.scene.objects[index];
+
+        match &mut object.geometry {
+          Geometry::Sphere { center: _, radius } => {
+            ui.horizontal(|ui| {
+              ui.label("Radius: ");
+              ui.add(egui::DragValue::new(radius)
+                .fixed_decimals(1)
+                .speed(0.1));
+            });
+          },
+          Geometry::Plane { center: _, normal, size } => {
+            ui.horizontal(|ui| {
+              ui.label("Normal: ");
+              ui.add(egui::DragValue::new(&mut normal.x)
+                .fixed_decimals(1)
+                .speed(0.1));
+              ui.add(egui::DragValue::new(&mut normal.y)
+                .fixed_decimals(1)
+                .speed(0.1));
+              ui.add(egui::DragValue::new(&mut normal.z)
+                .fixed_decimals(1)
+                .speed(0.1));
+              
+              *normal = normal.normalize();
+            });
+
+            ui.horizontal(|ui| {
+              ui.label("Size: ");
+              ui.add(egui::DragValue::new(size)
+                .fixed_decimals(1)
+                .speed(0.1));
+            });
+          }
+        }
 
         ui.horizontal(|ui| {
           ui.label("Colour: ");
