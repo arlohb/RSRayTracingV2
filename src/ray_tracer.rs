@@ -46,7 +46,8 @@ impl RayTracer {
   }
 
   pub fn right(&self) -> Vec3 {
-    let temp = Vec3 { x: 0., y: 1., z: 0. };
+    let temp = Vec3 { x: 0., y: 1., z: 0. }
+      .transform_point(Mat44::create_rotation(Axis::Z, -self.rotation.z));
     (temp * self.forward()).normalize()
   }
 

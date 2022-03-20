@@ -29,7 +29,7 @@ impl Default for TemplateApp {
     Self {
       ray_tracer: RayTracer {
         camera: Vec3 { x: 5., y: 5., z: 5. },
-        rotation: Vec3 { x: 0., y: 0., z: 0. },
+        rotation: Vec3 { x: 0.7, y: -std::f64::consts::PI / 4., z: 0. },
         fov: 70.,
         width,
         height,
@@ -131,6 +131,22 @@ impl Default for TemplateApp {
   }
 }
 
+fn vec3_widget(ui: &mut egui::Ui, label: impl Into<egui::WidgetText>, vec3: &mut Vec3) {
+  ui.horizontal(|ui| {
+    ui.label(label);
+
+    ui.add(egui::DragValue::new(&mut vec3.x)
+      .fixed_decimals(1)
+      .speed(0.1));
+    ui.add(egui::DragValue::new(&mut vec3.y)
+      .fixed_decimals(1)
+      .speed(0.1));
+    ui.add(egui::DragValue::new(&mut vec3.z)
+      .fixed_decimals(1)
+      .speed(0.1));
+  });
+}
+
 impl epi::App for TemplateApp {
   fn name(&self) -> &str {
     "RSRayTracingV2"
@@ -170,8 +186,8 @@ impl epi::App for TemplateApp {
 
     let mut has_size_changed = false;
 
-    let look_speed = 0.035;
-    let move_speed = 0.1;
+    let look_speed = delta_time * 1.5;
+    let move_speed = delta_time * 4.;
 
     if ctx.input().key_down(egui::Key::ArrowRight) {
       ray_tracer.rotation.y += look_speed;
@@ -188,6 +204,7 @@ impl epi::App for TemplateApp {
 
     ray_tracer.rotation.x = ray_tracer.rotation.x.clamp(-0.5 * std::f64::consts::PI, 0.5 * std::f64::consts::PI);
     ray_tracer.rotation.y %= 2. * std::f64::consts::PI;
+    ray_tracer.rotation.z = ray_tracer.rotation.z.clamp(-std::f64::consts::PI, std::f64::consts::PI);
 
     if ctx.input().key_down(egui::Key::W) {
       ray_tracer.camera -= ray_tracer.forward() * move_speed;
@@ -214,7 +231,7 @@ impl epi::App for TemplateApp {
 
       let theta: f64 = 0.5 * std::f64::consts::PI * delta_time;
 
-      position.transform_point(Mat44::create_rotation(Axis::Y, theta));
+      *position = position.transform_point(Mat44::create_rotation(Axis::Y, theta));
 
       // fix rounding errors?
       *position = *position * (length / position.length());
@@ -231,14 +248,12 @@ impl epi::App for TemplateApp {
         let mut new_width = ray_tracer.width;
         let mut new_height = ray_tracer.height;
 
-        ui.label("width: ");
+        ui.label("width");
         ui.add(egui::DragValue::new(&mut new_width)
           .speed(20));
-        ui.label("height: ");
+        ui.label("height");
         ui.add(egui::DragValue::new(&mut new_height)
           .speed(20));
-
-        ui.separator();
 
         if new_width != ray_tracer.width || new_height != ray_tracer.height {
           has_size_changed = true;
@@ -247,8 +262,15 @@ impl epi::App for TemplateApp {
         }
       });
 
+      ui.separator();
+
+      vec3_widget(ui, "pos", &mut ray_tracer.camera);
+      vec3_widget(ui, "rot", &mut ray_tracer.rotation);
+
+      ui.separator();
+
       ui.horizontal(|ui| {
-        ui.label("bounces: ");
+        ui.label("bounces");
         ui.add(egui::DragValue::new(&mut ray_tracer.scene.reflection_limit)
           .clamp_range::<u32>(0..=10));
       });
@@ -256,7 +278,7 @@ impl epi::App for TemplateApp {
 
     let object_panel = |ui: &mut egui::Ui| {
       ui.horizontal(|ui| {
-        if ui.add(egui::Button::new("➕ Sphere")).clicked() {
+        if ui.add(egui::Button::new("➕ sphere")).clicked() {
           ray_tracer.scene.objects.push(Object {
             name: String::from("sphere"),
             material: Material {
@@ -270,7 +292,7 @@ impl epi::App for TemplateApp {
             },
           });
         }
-        if ui.add(egui::Button::new("➕ Plane")).clicked() {
+        if ui.add(egui::Button::new("➕ plane")).clicked() {
           ray_tracer.scene.objects.push(Object {
             name: String::from("plane"),
             material: Material {
@@ -285,7 +307,7 @@ impl epi::App for TemplateApp {
             },
           });
         }
-        if ui.add(egui::Button::new("Print")).clicked() {
+        if ui.add(egui::Button::new("print")).clicked() {
           println!("{:#?}", ray_tracer.scene.objects);
         }
       });
@@ -297,28 +319,16 @@ impl epi::App for TemplateApp {
       for i in 0..ray_tracer.scene.objects.len() {
         let index = if has_removed_object { i - 1 } else { i };
 
-        ui.label(&ray_tracer.scene.objects[index].name);
-
         ui.horizontal(|ui| {
-          ui.label("Pos: ");
+          ui.label(&ray_tracer.scene.objects[index].name);
 
-          let position = ray_tracer.scene.objects[index].geometry.position_as_mut();
-
-          ui.add(egui::DragValue::new(&mut position.x)
-            .fixed_decimals(1)
-            .speed(0.1));
-          ui.add(egui::DragValue::new(&mut position.y)
-            .fixed_decimals(1)
-            .speed(0.1));
-          ui.add(egui::DragValue::new(&mut position.z)
-            .fixed_decimals(1)
-            .speed(0.1));
-          
           if ui.add(egui::Button::new("❌")).clicked() {
             ray_tracer.scene.objects.remove(index);
             has_removed_object = true;
           }
         });
+
+        vec3_widget(ui, "pos", ray_tracer.scene.objects[index].geometry.position_as_mut());
 
         if has_removed_object {
           continue;
@@ -329,7 +339,7 @@ impl epi::App for TemplateApp {
         match &mut object.geometry {
           Geometry::Sphere { center: _, radius } => {
             ui.horizontal(|ui| {
-              ui.label("Radius: ");
+              ui.label("radius");
               ui.add(egui::DragValue::new(radius)
                 .fixed_decimals(1)
                 .speed(0.1));
@@ -337,7 +347,7 @@ impl epi::App for TemplateApp {
           },
           Geometry::Plane { center: _, normal, size } => {
             ui.horizontal(|ui| {
-              ui.label("Normal: ");
+              ui.label("normal");
               ui.add(egui::DragValue::new(&mut normal.x)
                 .fixed_decimals(1)
                 .speed(0.1));
@@ -352,7 +362,7 @@ impl epi::App for TemplateApp {
             });
 
             ui.horizontal(|ui| {
-              ui.label("Size: ");
+              ui.label("size");
               ui.add(egui::DragValue::new(size)
                 .fixed_decimals(1)
                 .speed(0.1));
@@ -361,7 +371,7 @@ impl epi::App for TemplateApp {
         }
 
         ui.horizontal(|ui| {
-          ui.label("Col: ");
+          ui.label("col");
 
           let mut colour = [object.material.colour.0 as f32, object.material.colour.1 as f32, object.material.colour.2 as f32];
 
@@ -369,11 +379,11 @@ impl epi::App for TemplateApp {
 
           object.material.colour = (colour[0] as f64, colour[1] as f64, colour[2] as f64);
 
-          ui.label("Spec: ");
+          ui.label("spec");
           ui.add(egui::DragValue::new(&mut object.material.specular)
             .clamp_range::<f64>(0.0..=1000.));
           
-          ui.label("Met: ");
+          ui.label("met");
           ui.add(egui::DragValue::new(&mut object.material.metallic)
             .clamp_range::<f64>(0.0..=1.)
             .speed(0.1));
