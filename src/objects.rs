@@ -80,10 +80,10 @@ impl Light {
     }
   }
 
-  pub fn direction(&self, point: Vec3) -> Vec3 {
+  pub fn vec_to_light(&self, point: Vec3) -> Vec3 {
     match self {
-      Light::Direction { intensity: _, direction } => *direction,
-      Light::Point { intensity: _, position } => *position - point,
+      Light::Direction { intensity: _, direction } => -*direction,
+      Light::Point { intensity: _, position } => point - *position,
     }
   }
 }

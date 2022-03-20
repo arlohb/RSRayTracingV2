@@ -96,7 +96,7 @@ impl Default for TemplateApp {
           lights: vec![
             Light::Direction {
               intensity: (0.8, 0.8, 0.8),
-              direction: Vec3 { x: -1., y: 1.5, z: -0.5 }.normalize(),
+              direction: Vec3 { x: -1., y: -1.5, z: -0.5 }.normalize(),
             },
           ],
           background_colour: (0.5, 0.8, 1.),

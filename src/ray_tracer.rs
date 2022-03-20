@@ -37,12 +37,12 @@ impl RayTracer {
 
     for light in self.scene.lights.iter() {
       let intensity = light.intensity(point);
-      let light_direction = light.direction(point);
+      let vec_to_light = light.vec_to_light(point);
 
-      let strength = (normal.dot(light_direction)
-        / (normal.length() * light_direction.length())).clamp(0., 1.);
+      let strength = (normal.dot(vec_to_light)
+        / (normal.length() * vec_to_light.length())).clamp(0., 1.);
       
-      let reflection_vector = (normal * normal.dot(light_direction)) * 2. - light_direction;
+      let reflection_vector = (normal * normal.dot(vec_to_light)) * 2. - vec_to_light;
       let camera_vector = camera_pos - point;
 
       let specular = (reflection_vector.dot(camera_vector)
