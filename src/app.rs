@@ -7,7 +7,8 @@ use crate::{
     Material,
     Geometry,
     Object,
-  }
+  },
+  scene::Scene,
 };
 
 pub struct TemplateApp {
@@ -28,8 +29,8 @@ impl Default for TemplateApp {
         fov: 70.,
         width,
         height,
-        scene: (
-          vec![
+        scene: Scene {
+          objects: vec![
             Object {
               name: String::from("sphere"),
               material: Material {
@@ -42,13 +43,15 @@ impl Default for TemplateApp {
               },
             },
           ],
-          vec![
+          lights: vec![
             Light::Direction {
               intensity: (0.8, 0.8, 0.8),
               direction: Vec3 { x: -1., y: 1.5, z: -0.5 }.normalize(),
             },
           ],
-        )
+          background_colour: (0.5, 0.8, 1.),
+          ambient_light: (0.2, 0.2, 0.2),
+        },
       },
       frame_times: egui::util::History::new(0..usize::MAX, 20.),
       image: eframe::epaint::ColorImage::new([width as usize, height as usize], eframe::epaint::Color32::BLACK),
@@ -127,7 +130,7 @@ impl epi::App for TemplateApp {
       ui.heading("Objects");
 
       if ui.add(egui::Button::new("Add sphere")).clicked() {
-        ray_tracer.scene.0.push(Object {
+        ray_tracer.scene.objects.push(Object {
           name: String::from("sphere"),
           material: Material {
             colour: (1., 0., 0.),
@@ -142,7 +145,7 @@ impl epi::App for TemplateApp {
 
       ui.separator();
 
-      for object in &mut ray_tracer.scene.0 {
+      for object in &mut ray_tracer.scene.objects {
         ui.horizontal(|ui| {
           let position = object.geometry.position_as_mut();
 

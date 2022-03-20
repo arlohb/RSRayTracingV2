@@ -4,16 +4,13 @@ use rayon::prelude::*;
 use crate::{
   vec3::Vec3,
   objects::{
-    Light,
     Material,
     Object,
   },
   camera::Camera,
   ray::Ray,
+  scene::Scene,
 };
-
-const BACKGROUND_COLOUR: (f64, f64, f64) = (0.5, 0.8, 1.);
-const AMBIENT_LIGHT: (f64, f64, f64) = (0.2, 0.2, 0.2);
 
 pub struct RayTracer {
   pub from: Vec3,
@@ -21,7 +18,7 @@ pub struct RayTracer {
   pub fov: f64,
   pub width: u32,
   pub height: u32,
-  pub scene: (Vec<Object>, Vec<Light>),
+  pub scene: Scene,
 }
 
 impl RayTracer {
@@ -33,12 +30,12 @@ impl RayTracer {
     material: &Material,
   ) -> (f64, f64, f64) {
     let mut result = (
-      AMBIENT_LIGHT.0,
-      AMBIENT_LIGHT.1,
-      AMBIENT_LIGHT.2,
+      self.scene.ambient_light.0,
+      self.scene.ambient_light.1,
+      self.scene.ambient_light.2,
     );
 
-    for light in self.scene.1.iter() {
+    for light in self.scene.lights.iter() {
       let intensity = light.intensity(point);
       let light_direction = light.direction(point);
 
@@ -66,7 +63,7 @@ impl RayTracer {
     let mut min_hit_distance = 1e9;
     let mut min_hit_object: Option<&Object> = None;
 
-    for object in &self.scene.0 {
+    for object in &self.scene.objects {
       let distance = match object.geometry.intersect(ray) {
         Some(d) => d,
         None => continue
@@ -126,7 +123,7 @@ impl RayTracer {
             brightness.2 * object.material.colour.2,
         )
       },
-      None => BACKGROUND_COLOUR
+      None => self.scene.background_colour,
     }
   }
 

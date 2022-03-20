@@ -43,7 +43,7 @@ impl Geometry {
 
   pub fn normal_at_point (&self, point: Vec3) -> Vec3 {
     match self {
-      Geometry::Sphere { center, radius } => {
+      Geometry::Sphere { center, radius: _ } => {
         // simple circle stuff
         (point - *center).normalize()
       }

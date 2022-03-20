@@ -7,6 +7,7 @@ mod camera;
 mod ray;
 mod objects;
 mod solver;
+mod scene;
 
 // ----------------------------------------------------------------------------
 // When compiling for web:
