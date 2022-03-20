@@ -44,6 +44,7 @@ impl Default for TemplateApp {
                         0.0,
                     ),
                     specular: 5.0,
+                    metallic: 1.0,
                 },
                 geometry: Geometry::Sphere {
                     center: Vec3 {
@@ -62,7 +63,8 @@ impl Default for TemplateApp {
                         0.3486607074737549,
                         0.0,
                     ),
-                    specular: 2.0,
+                    specular: 800.0,
+                    metallic: 0.2,
                 },
                 geometry: Geometry::Sphere {
                     center: Vec3 {
@@ -82,6 +84,7 @@ impl Default for TemplateApp {
                         1.0,
                     ),
                     specular: 80.0,
+                    metallic: 0.,
                 },
                 geometry: Geometry::Sphere {
                     center: Vec3 {
@@ -97,6 +100,7 @@ impl Default for TemplateApp {
               material: Material {
                 colour: (0.8, 0.8, 1.),
                 specular: 50.,
+                metallic: 0.2,
               },
               geometry: Geometry::Plane {
                 center: Vec3 { x: 0., y: -1.5, z: 0. },
@@ -117,6 +121,7 @@ impl Default for TemplateApp {
           ],
           background_colour: (0.5, 0.8, 1.),
           ambient_light: (0.2, 0.2, 0.2),
+          reflection_limit: 4,
         },
       },
       frame_times: egui::util::History::new(0..usize::MAX, 20.),
@@ -203,6 +208,12 @@ impl epi::App for TemplateApp {
           ray_tracer.height = new_height;
         }
       });
+
+      ui.horizontal(|ui| {
+        ui.label("bounces: ");
+        ui.add(egui::DragValue::new(&mut ray_tracer.scene.reflection_limit)
+          .clamp_range::<u32>(0..=10));
+      });
     };
 
     let object_panel = |ui: &mut egui::Ui| {
@@ -213,6 +224,7 @@ impl epi::App for TemplateApp {
             material: Material {
               colour: (1., 0., 0.),
               specular: 500.,
+              metallic: 0.5,
             },
             geometry: Geometry::Sphere {
               center: Vec3 { x: 0., y: 0., z: 0., },
@@ -226,6 +238,7 @@ impl epi::App for TemplateApp {
             material: Material {
               colour: (1., 0., 0.),
               specular: 500.,
+              metallic: 0.5,
             },
             geometry: Geometry::Plane {
               center: Vec3 { x: 0., y: 0., z: 0., },
@@ -310,7 +323,7 @@ impl epi::App for TemplateApp {
         }
 
         ui.horizontal(|ui| {
-          ui.label("Colour: ");
+          ui.label("Col: ");
 
           let mut colour = [object.material.colour.0 as f32, object.material.colour.1 as f32, object.material.colour.2 as f32];
 
@@ -320,7 +333,12 @@ impl epi::App for TemplateApp {
 
           ui.label("Spec: ");
           ui.add(egui::DragValue::new(&mut object.material.specular)
-            .clamp_range(0..=1000));
+            .clamp_range::<f64>(0.0..=1000.));
+          
+          ui.label("Met: ");
+          ui.add(egui::DragValue::new(&mut object.material.metallic)
+            .clamp_range::<f64>(0.0..=1.)
+            .speed(0.1));
         });
 
         ui.separator();

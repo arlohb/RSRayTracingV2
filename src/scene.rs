@@ -8,4 +8,5 @@ pub struct Scene {
   pub lights: Vec<Light>,
   pub background_colour: (f64, f64, f64),
   pub ambient_light: (f64, f64, f64),
+  pub reflection_limit: u32,
 }

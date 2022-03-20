@@ -28,6 +28,10 @@ pub struct RayTracer {
 }
 
 impl RayTracer {
+  fn reflect_ray(ray: Vec3, surface_normal: Vec3) -> Vec3 {
+    (surface_normal * surface_normal.dot(ray)) * 2. - ray
+  }
+
   fn calculate_light(
     &self,
     point: Vec3,
@@ -44,6 +48,7 @@ impl RayTracer {
     for light in self.scene.lights.iter() {
       let point_to_light = light.point_to_light(point);
 
+      // ignore this light if object is in shadow
       match self.ray_hit(&Ray {
         origin: point,
         direction: point_to_light.normalize(),
@@ -52,13 +57,12 @@ impl RayTracer {
         None => (),
       }
 
-
       let intensity = light.intensity(point);
 
       let strength = (normal.dot(point_to_light)
         / (normal.length() * point_to_light.length())).clamp(0., 1.);
       
-      let reflection_vector = (normal * normal.dot(point_to_light)) * 2. - point_to_light;
+      let reflection_vector = RayTracer::reflect_ray(point_to_light.normalize(), normal);
       let camera_vector = camera_pos - point;
 
       let specular = (reflection_vector.dot(camera_vector)
@@ -114,17 +118,34 @@ impl RayTracer {
   fn trace_ray(
     &self,
     ray: &Ray,
-    camera: &Camera
+    camera: &Camera,
+    depth: u32,
   ) -> (f64, f64, f64) {
     match self.ray_hit(&ray) {
       Some((object, hit_point)) => {
         let normal = object.geometry.normal_at_point(hit_point);
 
         let brightness = self.calculate_light(hit_point, normal, camera.from, &object.material);
-        (
+        let local_colour = (
             brightness.0 * object.material.colour.0,
             brightness.1 * object.material.colour.1,
             brightness.2 * object.material.colour.2,
+        );
+
+        if object.material.metallic <= 0. || depth >= self.scene.reflection_limit {
+          return local_colour;
+        }
+
+        let reflection_ray = Ray {
+          origin: hit_point,
+          direction: RayTracer::reflect_ray(-ray.direction, normal),
+        };
+        let reflected_colour = self.trace_ray(&reflection_ray, camera, depth + 1);
+
+        (
+          local_colour.0 * (1. - object.material.metallic) + reflected_colour.0 * object.material.metallic,
+          local_colour.1 * (1. - object.material.metallic) + reflected_colour.1 * object.material.metallic,
+          local_colour.2 * (1. - object.material.metallic) + reflected_colour.2 * object.material.metallic,
         )
       },
       None => self.scene.background_colour,
@@ -158,7 +179,7 @@ impl RayTracer {
       direction
     };
 
-    self.trace_ray(&ray, camera)
+    self.trace_ray(&ray, camera, 0)
   }
 
   pub fn rs_render(&self, image: &mut eframe::epaint::ColorImage) {

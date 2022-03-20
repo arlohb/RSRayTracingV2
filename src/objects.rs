@@ -6,6 +6,7 @@ pub use crate::solver::solve_quadratic;
 pub struct Material {
   pub colour: (f64, f64, f64),
   pub specular: f64,
+  pub metallic: f64,
 }
 
 #[derive(Debug)]
