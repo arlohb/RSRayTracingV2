@@ -83,12 +83,15 @@ impl epi::App for TemplateApp {
       texture,
     } = self;
 
+    let screen_rect = ctx.input().screen_rect;
+    let is_portrait = screen_rect.height() > screen_rect.width();
+
     let previous_frame_time = frame.info().cpu_usage.unwrap_or(0.);
     frame_times.add(ctx.input().time, previous_frame_time);
 
     let mut has_size_changed = false;
 
-    egui::SidePanel::right("settings_panel").show(ctx, |ui| {
+    let settings_panel = |ui: &mut egui::Ui| {
       ui.heading("Settings");
 
       ui.label(format!("fps: {}", 1. / frame_times.average().unwrap_or(1.)));
@@ -114,9 +117,9 @@ impl epi::App for TemplateApp {
           ray_tracer.height = new_height;
         }
       });
-    });
+    };
 
-    egui::SidePanel::right("object_panel").show(ctx, |ui| {
+    let object_panel = |ui: &mut egui::Ui| {
       ui.heading("Objects");
 
       if ui.add(egui::Button::new("Add sphere")).clicked() {
@@ -147,9 +150,21 @@ impl epi::App for TemplateApp {
 
         ui.separator();
       }
-    });
+    };
+
+    if is_portrait {
+      egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
+        egui::SidePanel::left("object_panel").show_inside(ui, object_panel);
+        egui::SidePanel::right("settings_panel").show_inside(ui, settings_panel);
+      });
+    } else {
+      egui::SidePanel::right("settings_panel").show(ctx, settings_panel);
+      egui::SidePanel::right("object_panel").show(ctx, object_panel);
+    }
 
     egui::CentralPanel::default().show(ctx, |ui| {
+      ui.set_max_width(f32::INFINITY);
+      ui.set_max_height(f32::INFINITY);
       match texture {
         Some(texture) => {
           egui::Resize::default()
