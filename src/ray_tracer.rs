@@ -9,6 +9,10 @@ use crate::{
   },
   ray::Ray,
   scene::Scene,
+  mat44::{
+    Mat44,
+    Axis,
+  },
 };
 
 pub struct ImagePlane {
@@ -26,8 +30,8 @@ pub struct Hit<'a> {
 }
 
 pub struct RayTracer {
-  pub from: Vec3,
-  pub to: Vec3,
+  pub camera: Vec3,
+  pub rotation: Vec3,
   pub fov: f64,
   pub width: u32,
   pub height: u32,
@@ -35,15 +39,19 @@ pub struct RayTracer {
 }
 
 impl RayTracer {
-  fn get_camera_vectors(&self) -> (Vec3, Vec3, Vec3) {
-    let forward = (self.from - self.to).normalize();
+  pub fn forward(&self) -> Vec3 {
+    Vec3 { x: 0., y: 0., z: 1. }
+      .transform_point(Mat44::create_rotation(Axis::X, -self.rotation.x))
+      .transform_point(Mat44::create_rotation(Axis::Y, -self.rotation.y))
+  }
 
+  pub fn right(&self) -> Vec3 {
     let temp = Vec3 { x: 0., y: 1., z: 0. };
-    let right = (temp.normalize() * forward).normalize();
+    (temp * self.forward()).normalize()
+  }
 
-    let up = (forward * right).normalize();
-
-    (right, up, forward)
+  pub fn up(&self) -> Vec3 {
+    (self.forward() * self.right()).normalize()
   }
 
   fn get_image_plane(&self, aspect_ratio: f64) -> ImagePlane {
@@ -55,11 +63,13 @@ impl RayTracer {
     let height = width * aspect_ratio;
     let half_height = height / 2.;
 
-    let (right, up, forward) = self.get_camera_vectors();
+    let right = self.right();
+    let up = self.up();
+    let forward = self.forward();
 
     // the image plane is 1 unit away from the camera
     // this is - not + because the camera point in the -forward direction
-    let center = self.from - forward;
+    let center = self.camera - forward;
 
     ImagePlane {
       left: center - (right * half_width),
@@ -166,7 +176,7 @@ impl RayTracer {
       Some((object, hit_point)) => {
         let normal = object.geometry.normal_at_point(hit_point);
 
-        let brightness = self.calculate_light(hit_point, normal, self.from, &object.material);
+        let brightness = self.calculate_light(hit_point, normal, self.camera, &object.material);
         let local_colour = (
             brightness.0 * object.material.colour.0,
             brightness.1 * object.material.colour.1,
@@ -212,10 +222,10 @@ impl RayTracer {
 
     let pixel_world_space = top_left + x_offset + y_offset;
 
-    let direction = (pixel_world_space - self.from).normalize();
+    let direction = (pixel_world_space - self.camera).normalize();
 
     let ray = Ray {
-      origin: self.from,
+      origin: self.camera,
       direction
     };
 
@@ -234,7 +244,8 @@ impl RayTracer {
 
     let width_world_space = (image_plane.right - image_plane.left).length();
     let height_world_space = (image_plane.top - image_plane.bottom).length();
-    let (right, up, _) = self.get_camera_vectors();
+    let right = self.right();
+    let up = self.up();
 
     #[cfg(not(target_arch = "wasm32"))]
     image.pixels.par_iter_mut().enumerate().for_each(|(index, colour)| {

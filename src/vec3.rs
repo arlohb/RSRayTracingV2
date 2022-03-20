@@ -37,10 +37,12 @@ impl Vec3 {
     *self
   }
 
-  pub fn transform_point(&mut self, mat: Mat44) {
-    self.x = self.x * mat[0][0] + self.y * mat[1][0] + self.z * mat[2][0];
-    self.y = self.x * mat[0][1] + self.y * mat[1][1] + self.z * mat[2][1];
-    self.z = self.x * mat[0][2] + self.y * mat[1][2] + self.z * mat[2][2];
+  pub fn transform_point(&self, mat: Mat44) -> Vec3 {
+    Vec3 {
+      x: self.x * mat[0][0] + self.y * mat[1][0] + self.z * mat[2][0],
+      y: self.x * mat[0][1] + self.y * mat[1][1] + self.z * mat[2][1],
+      z: self.x * mat[0][2] + self.y * mat[1][2] + self.z * mat[2][2],
+    }
   }
 }
 

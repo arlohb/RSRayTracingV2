@@ -28,8 +28,8 @@ impl Default for TemplateApp {
     let height = 300;
     Self {
       ray_tracer: RayTracer {
-        from: Vec3 { x: 5., y: 5., z: 5. },
-        to: Vec3 { x: 0., y: 0., z: 0. },
+        camera: Vec3 { x: 5., y: 5., z: 5. },
+        rotation: Vec3 { x: 0., y: 0., z: 0. },
         fov: 70.,
         width,
         height,
@@ -169,6 +169,44 @@ impl epi::App for TemplateApp {
     let delta_time = previous_frame_time.max(1. / 60.) as f64;
 
     let mut has_size_changed = false;
+
+    let look_speed = 0.035;
+    let move_speed = 0.1;
+
+    if ctx.input().key_down(egui::Key::ArrowRight) {
+      ray_tracer.rotation.y += look_speed;
+    }
+    if ctx.input().key_down(egui::Key::ArrowLeft) {
+      ray_tracer.rotation.y -= look_speed;
+    }
+    if ctx.input().key_down(egui::Key::ArrowUp) {
+      ray_tracer.rotation.x -= look_speed;
+    }
+    if ctx.input().key_down(egui::Key::ArrowDown) {
+      ray_tracer.rotation.x += look_speed;
+    }
+
+    ray_tracer.rotation.x = ray_tracer.rotation.x.clamp(-0.5 * std::f64::consts::PI, 0.5 * std::f64::consts::PI);
+    ray_tracer.rotation.y %= 2. * std::f64::consts::PI;
+
+    if ctx.input().key_down(egui::Key::W) {
+      ray_tracer.camera -= ray_tracer.forward() * move_speed;
+    }
+    if ctx.input().key_down(egui::Key::S) {
+      ray_tracer.camera += ray_tracer.forward() * move_speed;
+    }
+    if ctx.input().key_down(egui::Key::D) {
+      ray_tracer.camera += ray_tracer.right() * move_speed;
+    }
+    if ctx.input().key_down(egui::Key::A) {
+      ray_tracer.camera -= ray_tracer.right() * move_speed;
+    }
+    if ctx.input().key_down(egui::Key::E) {
+      ray_tracer.camera += ray_tracer.up() * move_speed;
+    }
+    if ctx.input().key_down(egui::Key::Q) {
+      ray_tracer.camera -= ray_tracer.up() * move_speed;
+    }
 
     ray_tracer.scene.objects.iter_mut().for_each(|object| {
       let position = object.geometry.position_as_mut();
