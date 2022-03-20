@@ -32,17 +32,63 @@ impl Default for TemplateApp {
         scene: Scene {
           objects: vec![
             Object {
-              name: String::from("sphere"),
-              material: Material {
-                colour: (1., 0., 0.),
-                specular: 500.,
-              },
-              geometry: Geometry::Sphere {
-                center: Vec3 { x: 0., y: 0., z: 0., },
-                radius: 1.,
-              },
+                name: "sphere".to_string(),
+                material: Material {
+                    colour: (
+                        1.0,
+                        0.5212054252624512,
+                        0.0,
+                    ),
+                    specular: 10.0,
+                },
+                geometry: Geometry::Sphere {
+                    center: Vec3 {
+                        x: 1.5,
+                        y: 0.0,
+                        z: 0.0,
+                    },
+                    radius: 1.0,
+                },
             },
-          ],
+            Object {
+                name: "sphere".to_string(),
+                material: Material {
+                    colour: (
+                        1.0,
+                        0.3486607074737549,
+                        0.0,
+                    ),
+                    specular: 500.0,
+                },
+                geometry: Geometry::Sphere {
+                    center: Vec3 {
+                        x: 3.1,
+                        y: 0.0,
+                        z: 2.1,
+                    },
+                    radius: 1.0,
+                },
+            },
+            Object {
+                name: "sphere".to_string(),
+                material: Material {
+                    colour: (
+                        0.0,
+                        0.6445307731628418,
+                        1.0,
+                    ),
+                    specular: 500.0,
+                },
+                geometry: Geometry::Sphere {
+                    center: Vec3 {
+                        x: -8.3,
+                        y: 0.0,
+                        z: 0.0,
+                    },
+                    radius: 1.0,
+                },
+            },
+        ],
           lights: vec![
             Light::Direction {
               intensity: (0.8, 0.8, 0.8),
@@ -129,24 +175,31 @@ impl epi::App for TemplateApp {
     let object_panel = |ui: &mut egui::Ui| {
       ui.heading("Objects");
 
-      if ui.add(egui::Button::new("Add sphere")).clicked() {
-        ray_tracer.scene.objects.push(Object {
-          name: String::from("sphere"),
-          material: Material {
-            colour: (1., 0., 0.),
-            specular: 500.,
-          },
-          geometry: Geometry::Sphere {
-            center: Vec3 { x: 0., y: 0., z: 0., },
-            radius: 1.,
-          },
-        });
-      }
+      ui.horizontal(|ui| {
+        if ui.add(egui::Button::new("Add sphere")).clicked() {
+          ray_tracer.scene.objects.push(Object {
+            name: String::from("sphere"),
+            material: Material {
+              colour: (1., 0., 0.),
+              specular: 500.,
+            },
+            geometry: Geometry::Sphere {
+              center: Vec3 { x: 0., y: 0., z: 0., },
+              radius: 1.,
+            },
+          });
+        }
+        if ui.add(egui::Button::new("Print")).clicked() {
+          println!("{:#?}", ray_tracer.scene.objects);
+        }
+      });
 
       ui.separator();
 
       for object in &mut ray_tracer.scene.objects {
         ui.horizontal(|ui| {
+          ui.label("Pos: ");
+
           let position = object.geometry.position_as_mut();
 
           ui.add(egui::DragValue::new(&mut position.x)
@@ -158,6 +211,20 @@ impl epi::App for TemplateApp {
           ui.add(egui::DragValue::new(&mut position.z)
             .fixed_decimals(1usize)
             .speed(0.1));
+        });
+
+        ui.horizontal(|ui| {
+          ui.label("Colour: ");
+
+          let mut colour = [object.material.colour.0 as f32, object.material.colour.1 as f32, object.material.colour.2 as f32];
+
+          ui.color_edit_button_rgb(&mut colour);
+
+          object.material.colour = (colour[0] as f64, colour[1] as f64, colour[2] as f64);
+
+          ui.label("Spec: ");
+          ui.add(egui::DragValue::new(&mut object.material.specular)
+            .clamp_range(0..=1000));
         });
 
         ui.separator();

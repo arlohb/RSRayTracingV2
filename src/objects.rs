@@ -2,11 +2,13 @@ use crate::vec3::Vec3;
 use crate::ray::Ray;
 pub use crate::solver::solve_quadratic;
 
+#[derive(Debug)]
 pub struct Material {
   pub colour: (f64, f64, f64),
   pub specular: f64,
 }
 
+#[derive(Debug)]
 pub enum Geometry {
   Sphere {
     center: Vec3,
@@ -57,12 +59,14 @@ impl Geometry {
   }
 }
 
+#[derive(Debug)]
 pub struct Object {
   pub name: String,
   pub material: Material,
   pub geometry: Geometry,
 }
 
+#[derive(Debug)]
 pub enum Light {
   Direction { intensity: (f64, f64, f64), direction: Vec3},
   Point { intensity: (f64, f64, f64), position: Vec3},
