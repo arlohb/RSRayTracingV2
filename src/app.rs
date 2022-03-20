@@ -144,9 +144,7 @@ impl epi::App for TemplateApp {
 
       for object in &mut ray_tracer.scene.0 {
         ui.horizontal(|ui| {
-          let position = match &mut object.geometry {
-            Geometry::Sphere { center, radius: _ } => center,
-          };
+          let position = object.geometry.position_as_mut();
 
           ui.add(egui::DragValue::new(&mut position.x)
             .fixed_decimals(1usize)

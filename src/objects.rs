@@ -49,6 +49,12 @@ impl Geometry {
       }
     }
   }
+
+  pub fn position_as_mut (&mut self) -> &mut Vec3 {
+    match self {
+      Geometry::Sphere { center, radius: _ } => center,
+    }
+  }
 }
 
 pub struct Object {
