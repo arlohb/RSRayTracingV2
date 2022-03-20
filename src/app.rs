@@ -161,14 +161,20 @@ impl epi::App for TemplateApp {
 
     let previous_frame_time = frame.info().cpu_usage.unwrap_or(0.);
     frame_times.add(ctx.input().time, previous_frame_time);
+    let delta_time = previous_frame_time.max(1. / 60.) as f64;
 
     let mut has_size_changed = false;
 
     ray_tracer.scene.objects.iter_mut().for_each(|object| {
-      let theta: f64 = 2. * std::f64::consts::PI * previous_frame_time as f64;
+      let position = object.geometry.position_as_mut();
+      let length = position.length();
 
-      object.geometry.position_as_mut().transform_point(Mat44::create_rotation(Axis::Y, theta));
-      
+      let theta: f64 = 0.5 * std::f64::consts::PI * delta_time;
+
+      position.transform_point(Mat44::create_rotation(Axis::Y, theta));
+
+      // fix rounding errors?
+      *position = *position * (length / position.length());
     });
 
     let settings_panel = |ui: &mut egui::Ui| {
