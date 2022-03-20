@@ -8,6 +8,7 @@ mod ray;
 mod objects;
 mod solver;
 mod scene;
+mod mat44;
 
 // ----------------------------------------------------------------------------
 // When compiling for web:

@@ -9,6 +9,10 @@ use crate::{
     Object,
   },
   scene::Scene,
+  mat44::{
+    Mat44,
+    Axis,
+  }
 };
 
 pub struct TemplateApp {
@@ -39,7 +43,7 @@ impl Default for TemplateApp {
                         0.5212054252624512,
                         0.0,
                     ),
-                    specular: 10.0,
+                    specular: 5.0,
                 },
                 geometry: Geometry::Sphere {
                     center: Vec3 {
@@ -58,7 +62,7 @@ impl Default for TemplateApp {
                         0.3486607074737549,
                         0.0,
                     ),
-                    specular: 500.0,
+                    specular: 2.0,
                 },
                 geometry: Geometry::Sphere {
                     center: Vec3 {
@@ -77,7 +81,7 @@ impl Default for TemplateApp {
                         0.6445307731628418,
                         1.0,
                     ),
-                    specular: 500.0,
+                    specular: 80.0,
                 },
                 geometry: Geometry::Sphere {
                     center: Vec3 {
@@ -143,6 +147,13 @@ impl epi::App for TemplateApp {
     frame_times.add(ctx.input().time, previous_frame_time);
 
     let mut has_size_changed = false;
+
+    ray_tracer.scene.objects.iter_mut().for_each(|object| {
+      let theta: f64 = 2. * std::f64::consts::PI * previous_frame_time as f64;
+
+      object.geometry.position_as_mut().transform_point(Mat44::create_rotation(Axis::Y, theta));
+      
+    });
 
     let settings_panel = |ui: &mut egui::Ui| {
       ui.heading("Settings");
