@@ -184,8 +184,6 @@ impl epi::App for TemplateApp {
     };
 
     let object_panel = |ui: &mut egui::Ui| {
-      ui.heading("Objects");
-
       ui.horizontal(|ui| {
         if ui.add(egui::Button::new("Add sphere")).clicked() {
           ray_tracer.scene.objects.push(Object {
@@ -207,11 +205,15 @@ impl epi::App for TemplateApp {
 
       ui.separator();
 
-      for object in &mut ray_tracer.scene.objects {
+      let mut has_removed_object = false;
+
+      for i in 0..ray_tracer.scene.objects.len() {
+        let index = if has_removed_object { i - 1 } else { i };
+
         ui.horizontal(|ui| {
           ui.label("Pos: ");
 
-          let position = object.geometry.position_as_mut();
+          let position = ray_tracer.scene.objects[index].geometry.position_as_mut();
 
           ui.add(egui::DragValue::new(&mut position.x)
             .fixed_decimals(1usize)
@@ -222,7 +224,18 @@ impl epi::App for TemplateApp {
           ui.add(egui::DragValue::new(&mut position.z)
             .fixed_decimals(1usize)
             .speed(0.1));
+          
+          if ui.add(egui::Button::new("❌")).clicked() {
+            ray_tracer.scene.objects.remove(index);
+            has_removed_object = true;
+          }
         });
+
+        if has_removed_object {
+          continue;
+        }
+
+        let object = &mut ray_tracer.scene.objects[index];
 
         ui.horizontal(|ui| {
           ui.label("Colour: ");
@@ -239,7 +252,7 @@ impl epi::App for TemplateApp {
         });
 
         ui.separator();
-      }
+      };
     };
 
     if is_portrait {
