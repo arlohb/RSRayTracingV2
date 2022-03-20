@@ -44,7 +44,7 @@ impl RayTracer {
     for light in self.scene.lights.iter() {
       let point_to_light = light.point_to_light(point);
 
-      match self.trace_ray(&Ray {
+      match self.ray_hit(&Ray {
         origin: point,
         direction: point_to_light.normalize(),
       }) {
@@ -72,7 +72,7 @@ impl RayTracer {
     result
   }
 
-  fn trace_ray(
+  fn ray_hit(
     &self,
     ray: &Ray,
   ) -> Option<(&Object, Vec3)> {
@@ -111,6 +111,26 @@ impl RayTracer {
     }
   }
 
+  fn trace_ray(
+    &self,
+    ray: &Ray,
+    camera: &Camera
+  ) -> (f64, f64, f64) {
+    match self.ray_hit(&ray) {
+      Some((object, hit_point)) => {
+        let normal = object.geometry.normal_at_point(hit_point);
+
+        let brightness = self.calculate_light(hit_point, normal, camera.from, &object.material);
+        (
+            brightness.0 * object.material.colour.0,
+            brightness.1 * object.material.colour.1,
+            brightness.2 * object.material.colour.2,
+        )
+      },
+      None => self.scene.background_colour,
+    }
+  }
+
   fn render_pixel(
     &self,
     x: u32,
@@ -138,19 +158,7 @@ impl RayTracer {
       direction
     };
 
-    match self.trace_ray(&ray) {
-      Some((object, hit_point)) => {
-        let normal = object.geometry.normal_at_point(hit_point);
-
-        let brightness = self.calculate_light(hit_point, normal, camera.from, &object.material);
-        (
-            brightness.0 * object.material.colour.0,
-            brightness.1 * object.material.colour.1,
-            brightness.2 * object.material.colour.2,
-        )
-      },
-      None => self.scene.background_colour,
-    }
+    self.trace_ray(&ray, camera)
   }
 
   pub fn rs_render(&self, image: &mut eframe::epaint::ColorImage) {
