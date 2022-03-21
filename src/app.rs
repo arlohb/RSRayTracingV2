@@ -122,6 +122,7 @@ impl Default for TemplateApp {
           background_colour: (0.5, 0.8, 1.),
           ambient_light: (0.2, 0.2, 0.2),
           reflection_limit: 4,
+          do_objects_spin: false,
         },
       },
       frame_times: egui::util::History::new(0..usize::MAX, 20.),
@@ -225,17 +226,19 @@ impl epi::App for TemplateApp {
       ray_tracer.camera -= ray_tracer.up() * move_speed;
     }
 
-    ray_tracer.scene.objects.iter_mut().for_each(|object| {
-      let position = object.geometry.position_as_mut();
-      let length = position.length();
+    if ray_tracer.scene.do_objects_spin {
+      ray_tracer.scene.objects.iter_mut().for_each(|object| {
+        let position = object.geometry.position_as_mut();
+        let length = position.length();
 
-      let theta: f64 = 0.5 * std::f64::consts::PI * delta_time;
+        let theta: f64 = 0.5 * std::f64::consts::PI * delta_time;
 
-      *position = position.transform_point(Mat44::create_rotation(Axis::Y, theta));
+        *position = position.transform_point(Mat44::create_rotation(Axis::Y, theta));
 
-      // fix rounding errors?
-      *position = *position * (length / position.length());
-    });
+        // fix rounding errors?
+        *position = *position * (length / position.length());
+      });
+    }
 
     let settings_panel = |ui: &mut egui::Ui| {
       ui.heading("Settings");
@@ -311,6 +314,10 @@ impl epi::App for TemplateApp {
           println!("{:#?}", ray_tracer.scene.objects);
         }
       });
+
+      ui.separator();
+
+      ui.checkbox(&mut ray_tracer.scene.do_objects_spin, "spin");
 
       ui.separator();
 
