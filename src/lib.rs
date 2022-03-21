@@ -2,6 +2,7 @@ mod app;
 pub use app::TemplateApp;
 
 pub mod ray_tracer;
+pub mod movement;
 
 // ----------------------------------------------------------------------------
 // When compiling for web:
