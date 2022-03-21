@@ -1,18 +1,14 @@
 #[cfg(not(target_arch = "wasm32"))]
 use rayon::prelude::*;
 
-use crate::{
-  vec3::Vec3,
-  objects::{
-    Material,
-    Object,
-  },
-  ray::Ray,
-  scene::Scene,
-  mat44::{
-    Mat44,
-    Axis,
-  },
+use crate::ray_tracer::{
+  Vec3,
+  Material,
+  Object,
+  Ray,
+  Scene,
+  Mat44,
+  Axis,
 };
 
 pub struct ImagePlane {

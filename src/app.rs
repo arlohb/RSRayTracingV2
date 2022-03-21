@@ -1,19 +1,5 @@
 use eframe::{egui, epi};
-use crate::ray_tracer::RayTracer;
-use crate::{
-  vec3::Vec3,
-  objects::{
-    Light,
-    Material,
-    Geometry,
-    Object,
-  },
-  scene::Scene,
-  mat44::{
-    Mat44,
-    Axis,
-  }
-};
+use crate::ray_tracer::*;
 
 pub struct TemplateApp {
   ray_tracer: RayTracer,

@@ -1,4 +1,4 @@
-use crate::objects::{
+use crate::ray_tracer::{
   Light,
   Object,
 };

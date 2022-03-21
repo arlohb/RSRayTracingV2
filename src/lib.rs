@@ -1,13 +1,7 @@
 mod app;
 pub use app::TemplateApp;
 
-mod ray_tracer;
-mod vec3;
-mod ray;
-mod objects;
-mod solver;
-mod scene;
-mod mat44;
+pub mod ray_tracer;
 
 // ----------------------------------------------------------------------------
 // When compiling for web:

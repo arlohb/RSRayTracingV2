@@ -1,6 +1,6 @@
 use std::ops;
 
-use crate::mat44::Mat44;
+use crate::ray_tracer::Mat44;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3 {

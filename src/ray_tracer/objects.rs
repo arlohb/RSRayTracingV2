@@ -1,6 +1,8 @@
-use crate::vec3::Vec3;
-use crate::ray::Ray;
-pub use crate::solver::solve_quadratic;
+use crate::ray_tracer::{
+  Vec3,
+  Ray,
+  solve_quadratic,
+};
 
 #[derive(Debug)]
 pub struct Material {
