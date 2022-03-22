@@ -17,7 +17,10 @@ createServer((request, response) => {
       return;
     }
 
-    response.writeHead(200);
+    response.writeHead(200, {
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Opener-Policy": "same-origin",
+    });
     response.write(data);
     response.end();
   })
