@@ -24,7 +24,7 @@ CRATE_NAME="rs_ray_tracing_v2"
 export RUSTFLAGS=--cfg=web_sys_unstable_apis
 
 # Clear output from old stuff:
-rm -f "docs/${CRATE_NAME}_bg.wasm"
+rm -f "web/${CRATE_NAME}_bg.wasm"
 
 echo "Building rust…"
 BUILD=release
@@ -36,10 +36,10 @@ TARGET=$(cargo metadata --format-version=1 | jq --raw-output .target_directory)
 echo "Generating JS bindings for wasm…"
 TARGET_NAME="${CRATE_NAME}.wasm"
 wasm-bindgen "${TARGET}/wasm32-unknown-unknown/${BUILD}/${TARGET_NAME}" \
-  --out-dir docs --no-modules --no-typescript
+  --out-dir web --no-modules --no-typescript
 
 echo "Optimizing wasm…"
 # to get wasm-opt:  apt/brew/dnf install binaryen
-wasm-opt "docs/${CRATE_NAME}_bg.wasm" -O2 --fast-math -o "docs/${CRATE_NAME}_bg.wasm" # add -g to get debug symbols
+wasm-opt "web/${CRATE_NAME}_bg.wasm" -O2 --fast-math -o "web/${CRATE_NAME}_bg.wasm" # add -g to get debug symbols
 
-echo "Finished: docs/${CRATE_NAME}.wasm"
+echo "Finished: web/${CRATE_NAME}.wasm"
