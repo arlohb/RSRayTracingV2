@@ -4,11 +4,11 @@ pub use app::TemplateApp;
 pub mod ray_tracer;
 pub mod movement;
 
-pub use wasm_bindgen_rayon::init_thread_pool;
-
 // ----------------------------------------------------------------------------
 // When compiling for web:
 
+#[cfg(target_arch = "wasm32")]
+pub use wasm_bindgen_rayon::init_thread_pool;
 #[cfg(target_arch = "wasm32")]
 use eframe::wasm_bindgen::{self, prelude::*};
 
