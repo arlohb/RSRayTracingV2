@@ -39,10 +39,10 @@ echo "Building rust…"
 #   --out-dir web --no-typescript
 
 RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
-  wasm-pack build --target web --release --out-dir "web/pkg" --no-typescript
+  wasm-pack build --target web --release --out-dir "web/pkg"
 
 echo "Optimizing wasm…"
 # to get wasm-opt:  apt/brew/dnf install binaryen
-wasm-opt "web/${CRATE_NAME}_bg.wasm" -O2 --fast-math -o "web/${CRATE_NAME}_bg.wasm" # add -g to get debug symbols
+wasm-opt "web/pkg/${CRATE_NAME}_bg.wasm" -O2 --fast-math -o "web/pkg/${CRATE_NAME}_bg.wasm" # add -g to get debug symbols
 
 echo "Finished: web/${CRATE_NAME}.wasm"

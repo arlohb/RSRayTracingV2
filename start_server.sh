@@ -4,4 +4,4 @@
 # so that if the server needs to change,
 # server automation won't break
 
-node server.mjs
+node server.js

@@ -1,0 +1,13 @@
+{
+  "name": "rsraytracingv2",
+  "version": "1.0.0",
+  "main": "server.js",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arlohb/RSRayTracingV2.git"
+  },
+  "dependencies": {
+    "mime-types": "^2.1.35"
+  }
+}
