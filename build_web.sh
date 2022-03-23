@@ -24,19 +24,6 @@ export RUSTFLAGS=--cfg=web_sys_unstable_apis
 rm -f "web/${CRATE_NAME}_bg.wasm"
 
 echo "Building rust…"
-# BUILD=release
-# RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
-#   cargo build -p "${CRATE_NAME}" --release --lib --target wasm32-unknown-unknown
-
-# # Get the output directory (in the workspace it is in another location)
-# TARGET=$(cargo metadata --format-version=1 | jq --raw-output .target_directory)
-
-# echo "Generating JS bindings for wasm…"
-# TARGET_NAME="${CRATE_NAME}.wasm"
-
-# RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
-#   wasm-bindgen --target web "${TARGET}/wasm32-unknown-unknown/${BUILD}/${TARGET_NAME}" \
-#   --out-dir web --no-typescript
 
 RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
   wasm-pack build --target web --release --out-dir "web/pkg"
