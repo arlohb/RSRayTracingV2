@@ -10,9 +10,6 @@ rustup target add wasm32-unknown-unknown
 cargo install wasm-bindgen-cli
 cargo update -p wasm-bindgen
 
-# For local tests with `./start_server`:
-cargo install basic-http-server
-
 # morf
 
 FOLDER_NAME=${PWD##*/}
@@ -27,16 +24,22 @@ export RUSTFLAGS=--cfg=web_sys_unstable_apis
 rm -f "web/${CRATE_NAME}_bg.wasm"
 
 echo "Building rust…"
-BUILD=release
-cargo build -p "${CRATE_NAME}" --release --lib --target wasm32-unknown-unknown
+# BUILD=release
+# RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
+#   cargo build -p "${CRATE_NAME}" --release --lib --target wasm32-unknown-unknown
 
-# Get the output directory (in the workspace it is in another location)
-TARGET=$(cargo metadata --format-version=1 | jq --raw-output .target_directory)
+# # Get the output directory (in the workspace it is in another location)
+# TARGET=$(cargo metadata --format-version=1 | jq --raw-output .target_directory)
 
-echo "Generating JS bindings for wasm…"
-TARGET_NAME="${CRATE_NAME}.wasm"
-wasm-bindgen "${TARGET}/wasm32-unknown-unknown/${BUILD}/${TARGET_NAME}" \
-  --out-dir web --no-modules --no-typescript
+# echo "Generating JS bindings for wasm…"
+# TARGET_NAME="${CRATE_NAME}.wasm"
+
+# RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
+#   wasm-bindgen --target web "${TARGET}/wasm32-unknown-unknown/${BUILD}/${TARGET_NAME}" \
+#   --out-dir web --no-typescript
+
+RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
+  wasm-pack build --target web --release --out-dir "web/pkg" --no-typescript
 
 echo "Optimizing wasm…"
 # to get wasm-opt:  apt/brew/dnf install binaryen
