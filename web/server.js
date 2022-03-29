@@ -11,7 +11,7 @@ const app = (request, response) => {
   const filename = `${process.cwd()}/${webFolder}${url}`;
   // lookup can deal with files in folders etc
   const mimeType = lookup(filename);
-  console.log(`Request for ${filename} with mime type ${mimeType}`);
+  console.log(url);
 
   // should promisify this
   readFile(filename, null, (err, data) => {
