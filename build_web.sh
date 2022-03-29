@@ -21,7 +21,7 @@ CRATE_NAME="rs_ray_tracing_v2"
 export RUSTFLAGS=--cfg=web_sys_unstable_apis
 
 # Clear output from old stuff:
-rm -f "web/${CRATE_NAME}_bg.wasm"
+rm -f "web/pkg/${CRATE_NAME}_bg.wasm"
 
 echo "Building rust…"
 
