@@ -2,8 +2,8 @@ var cacheName = 'egui-template-pwa';
 var filesToCache = [
   './',
   './index.html',
-  './rs_ray_tracing_v2.js',
-  './rs_ray_tracing_v2_bg.wasm',
+  './pkg/rs_ray_tracing_v2.js',
+  './pkg/rs_ray_tracing_v2_bg.wasm',
 ];
 
 /* Start the service worker and cache all of the app's content */
