@@ -24,4 +24,4 @@ opt-level = 2
 console_error_panic_hook = "0.1.6"
 tracing-wasm = "0.2"
 wasm-bindgen = "0.2.79"
-wasm-bindgen-rayon = "1.0.3"
+wasm-bindgen-rayon = { version = "1.0.3", features = ["no-bundler"] }
