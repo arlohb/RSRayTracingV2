@@ -2,19 +2,16 @@ import * as Comlink from "comlink";
 
 Comlink.expose({
   async main() {
-    console.log("Loading wasm");
+    console.log("Loading wasm in worker");
+    // this does mean I'm doing this twice, but I'm not sure how to avoid it
     const wasm = await import("../dist/pkg/rs_ray_tracing_v2.js");
 
-    // effectively wasm.init();
     await wasm.default();
 
-    console.log("Initialising thread pool");
+    console.log("Initialising thread pool in worker");
+    console.log("navigator.hardwareConcurrency:", navigator.hardwareConcurrency);
     await wasm.initThreadPool(navigator.hardwareConcurrency);
 
-    console.log("Starting app");
-    wasm.start("the_canvas_id");
-
-    console.log("App started");
-    document.getElementById("center_text").remove();
+    console.log("Thread pool initialised");
   }
 })
