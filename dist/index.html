@@ -94,28 +94,7 @@
         <div class="lds-dual-ring"></div>
     </div>
 
-    <script type="module">
-        import init, { start, initThreadPool } from "./pkg/rs_ray_tracing_v2.js";
-
-        const loadWasm = async () => {
-            console.log("loading wasm…");
-            await init("./pkg/rs_ray_tracing_v2_bg.wasm");
-
-            console.log("wasm loaded. starting app…");
-
-            await initThreadPool(navigator.hardwareConcurrency);
-
-            console.log("Thread pool initialised");
-
-            // This call installs a bunch of callbacks and then returns:
-            start("the_canvas_id");
-
-            console.log("app started.");
-            document.getElementById("center_text").remove();
-        };
-
-        loadWasm();
-    </script>
+    <script src="index.js"></script>
 </body>
 
 </html>

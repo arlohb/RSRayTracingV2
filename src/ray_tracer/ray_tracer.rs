@@ -244,7 +244,7 @@ impl RayTracer {
     let right = self.right();
     let up = self.up();
 
-    // #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(not(target_arch = "wasm32"))]
     image.pixels.par_iter_mut().enumerate().for_each(|(index, colour)| {
       let y = (index as u32) / (self.width as u32);
       let x = index as u32 % self.width;
@@ -258,18 +258,18 @@ impl RayTracer {
       );
     });
 
-    // #[cfg(target_arch = "wasm32")]
-    // image.pixels.iter_mut().enumerate().for_each(|(index, colour)| {
-    //   let y = (index as u32) / (self.width as u32);
-    //   let x = index as u32 % self.width;
+    #[cfg(target_arch = "wasm32")]
+    image.pixels.iter_mut().enumerate().for_each(|(index, colour)| {
+      let y = (index as u32) / (self.width as u32);
+      let x = index as u32 % self.width;
 
-    //   let pixel = self.render_pixel(x, y, top_left_point, width_world_space, height_world_space, right, up);
+      let pixel = self.render_pixel(x, y, top_left_point, width_world_space, height_world_space, right, up);
 
-    //   *colour = eframe::epaint::Color32::from_rgb(
-    //     (pixel.0 * 255.) as u8,
-    //     (pixel.1 * 255.) as u8,
-    //     (pixel.2 * 255.) as u8,
-    //   );
-    // });
+      *colour = eframe::epaint::Color32::from_rgb(
+        (pixel.0 * 255.) as u8,
+        (pixel.1 * 255.) as u8,
+        (pixel.2 * 255.) as u8,
+      );
+    });
   }
 }

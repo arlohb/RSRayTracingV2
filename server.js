@@ -3,7 +3,7 @@ import { readFile } from "fs";
 import { lookup } from "mime-types";
 
 const port = 8080;
-const webFolder = "web";
+const webFolder = "dist";
 
 createServer((request, response) => {
   const url = request.url === "/" ? "/index.html" : request.url;
