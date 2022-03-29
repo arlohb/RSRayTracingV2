@@ -45,8 +45,8 @@ try {
     key: fs.readFileSync(key),
     cert: fs.readFileSync(cert),
   }, app).listen(port + 1);
-} catch {
-  console.log("HTTPS failed");
+} catch (e) {
+  console.log(`HTTPS failed with error ${e}`);
 }
 
 console.log("Static file server running at http://localhost:" + port + "/\nCTRL + C to shutdown");
