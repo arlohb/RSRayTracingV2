@@ -13,5 +13,8 @@ Comlink.expose({
     await wasm.initThreadPool(navigator.hardwareConcurrency);
 
     console.log("Thread pool initialised");
+
+    // this may be helpful
+    // https://rustwasm.github.io/wasm-bindgen/examples/wasm-in-web-worker.html
   }
 })
