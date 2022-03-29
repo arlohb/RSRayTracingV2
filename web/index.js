@@ -2,7 +2,7 @@ import * as Comlink from "comlink";
 
 (async () => {
   console.log("Loading egui");
-  const egui = await import("./dist/pkg/rs_ray_tracing_v2.js");
+  const egui = await import("../dist/pkg/rs_ray_tracing_v2.js");
 
   // effectively wasm.init();
   await egui.default();

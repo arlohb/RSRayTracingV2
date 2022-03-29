@@ -4,9 +4,9 @@
   "type": "module",
   "scripts": {
     "start-linux": "cargo run --release --target x86_64-unknown-linux-gnu",
-    "start-web": "node server.js",
+    "start-web": "node web/server.js",
     "build:wasm": "wasm-pack build --target web --out-dir dist/pkg",
-    "build": "npm run build:wasm && webpack build ./index.js --mode development -o dist --output-filename index.js"
+    "build": "rm -rf dist && npm run build:wasm && webpack build ./web/index.js --mode production -o dist --output-filename index.js && cp -a web/dist/. dist/"
   },
   "repository": {
     "type": "git",

@@ -3,7 +3,7 @@ import * as Comlink from "comlink";
 Comlink.expose({
   async main() {
     console.log("Loading wasm");
-    const wasm = await import("./dist/pkg/rs_ray_tracing_v2.js");
+    const wasm = await import("../dist/pkg/rs_ray_tracing_v2.js");
 
     // effectively wasm.init();
     await wasm.default();
