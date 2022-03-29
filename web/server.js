@@ -42,8 +42,8 @@ try {
 
   createServerHTTPS({
     // should promisify this
-    key: fs.readFileSync(key),
-    cert: fs.readFileSync(cert),
+    key: readFileSync(key),
+    cert: readFileSync(cert),
   }, app).listen(port + 1);
 } catch (e) {
   console.log(`HTTPS failed with error ${e}`);
