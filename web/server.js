@@ -38,7 +38,7 @@ createServerHTTP(app).listen(port);
 
 try {
   // should promisify this
-  const { key, cert } = JSON.parse(readFileSync("secrets.json"));
+  const { key, cert } = JSON.parse(readFileSync("web/secrets.json"));
 
   createServerHTTPS({
     // should promisify this
