@@ -1,7 +1,7 @@
 use eframe::{egui, epi};
 use rayon::prelude::*;
 use wasm_bindgen::prelude::*;
-use crate::ray_tracer::*;
+use crate::{ray_tracer::*, linker::Linker, panels::*};
 
 #[wasm_bindgen]
 pub fn thread_test() -> u64 {
@@ -13,136 +13,19 @@ pub fn thread_test() -> u64 {
 }
 
 pub struct TemplateApp {
-  ray_tracer: RayTracer,
-  image: eframe::epaint::ColorImage,
-  texture: Option<eframe::epaint::TextureHandle>,
-  frame_times: egui::util::History<f32>,
+  // ray_tracer: RayTracer,
+  // image: eframe::epaint::ColorImage,
+  // texture: Option<eframe::epaint::TextureHandle>,
+  // frame_times: egui::util::History<f32>,
+  linker: Linker
 }
 
 impl Default for TemplateApp {
   fn default() -> Self {
-    let width = 400;
-    let height = 300;
     Self {
-      ray_tracer: RayTracer {
-        camera: Vec3 { x: 5., y: 5., z: 5. },
-        rotation: Vec3 { x: 0.7, y: -std::f64::consts::PI / 4., z: 0. },
-        fov: 70.,
-        width,
-        height,
-        scene: Scene {
-          objects: vec![
-            Object {
-                name: "sphere".to_string(),
-                material: Material {
-                    colour: (
-                        1.0,
-                        0.5212054252624512,
-                        0.0,
-                    ),
-                    specular: 5.0,
-                    metallic: 1.0,
-                },
-                geometry: Geometry::Sphere {
-                    center: Vec3 {
-                        x: 1.5,
-                        y: 0.0,
-                        z: 0.0,
-                    },
-                    radius: 1.0,
-                },
-            },
-            Object {
-                name: "sphere".to_string(),
-                material: Material {
-                    colour: (
-                        1.0,
-                        0.3486607074737549,
-                        0.0,
-                    ),
-                    specular: 800.0,
-                    metallic: 0.2,
-                },
-                geometry: Geometry::Sphere {
-                    center: Vec3 {
-                        x: 3.1,
-                        y: 0.0,
-                        z: 2.1,
-                    },
-                    radius: 1.0,
-                },
-            },
-            Object {
-                name: "sphere".to_string(),
-                material: Material {
-                    colour: (
-                        0.0,
-                        0.6445307731628418,
-                        1.0,
-                    ),
-                    specular: 80.0,
-                    metallic: 0.,
-                },
-                geometry: Geometry::Sphere {
-                    center: Vec3 {
-                        x: -8.3,
-                        y: 0.0,
-                        z: 0.0,
-                    },
-                    radius: 1.0,
-                },
-            },
-            Object {
-              name: "plane".to_string(),
-              material: Material {
-                colour: (0.8, 0.8, 1.),
-                specular: 50.,
-                metallic: 0.2,
-              },
-              geometry: Geometry::Plane {
-                center: Vec3 { x: 0., y: -1.5, z: 0. },
-                normal: Vec3 { x: 0., y: 1., z: 0. },
-                size: 5.,
-              },
-            },
-        ],
-          lights: vec![
-            Light::Direction {
-              intensity: (0.4, 0.4, 0.4),
-              direction: Vec3 { x: -1., y: -1.5, z: -0.5 }.normalize(),
-            },
-            Light::Point {
-              intensity: (0.4, 0.4, 0.4),
-              position: Vec3 { x: 0., y: 2., z: 0., },
-            },
-          ],
-          background_colour: (0.5, 0.8, 1.),
-          ambient_light: (0.2, 0.2, 0.2),
-          reflection_limit: 4,
-          do_objects_spin: false,
-        },
-      },
-      frame_times: egui::util::History::new(0..usize::MAX, 20.),
-      image: eframe::epaint::ColorImage::new([width as usize, height as usize], eframe::epaint::Color32::BLACK),
-      texture: None,
+      linker: Linker::new(400, 300),
     }
   }
-}
-
-fn vec3_widget(ui: &mut egui::Ui, label: impl Into<egui::WidgetText>, vec3: &mut Vec3) {
-  ui.horizontal(|ui| {
-    ui.label(label);
-
-    ui.add(egui::DragValue::new(&mut vec3.x)
-      .fixed_decimals(1)
-      .speed(0.1));
-    ui.add(egui::DragValue::new(&mut vec3.y)
-      .fixed_decimals(1)
-      .speed(0.1));
-    ui.add(egui::DragValue::new(&mut vec3.z)
-      .fixed_decimals(1)
-      .speed(0.1));
-  });
 }
 
 impl epi::App for TemplateApp {
@@ -162,244 +45,92 @@ impl epi::App for TemplateApp {
       style.visuals = egui::Visuals::dark();
       style
     });
-    self.texture = Some(ctx.load_texture("canvas", self.image.clone()));
+    let image = self.linker.get_image().clone();
+    self.linker.create_texture(ctx.load_texture("canvas", image));
   }
 
   /// Called each time the UI needs repainting, which may be many times per second.
   /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
-  fn update(&mut self, ctx: &egui::Context, frame: &epi::Frame) {
-    let Self {
-      ray_tracer,
-      frame_times,
-      image,
-      texture,
-    } = self;
-
+  fn update(&mut self, ctx: &egui::Context, frame: &epi::Frame) {    
     let screen_rect = ctx.input().screen_rect;
     let is_portrait = screen_rect.height() > screen_rect.width();
-
+    
     let previous_frame_time = frame.info().cpu_usage.unwrap_or(0.);
-    frame_times.add(ctx.input().time, previous_frame_time);
+    self.linker.add_frame_time(ctx.input().time, previous_frame_time);
     let delta_time = previous_frame_time.max(1. / 60.) as f64;
-
+    
     let mut has_size_changed = false;
 
-    let forward = ray_tracer.forward();
-    let right = ray_tracer.right();
-    let up = ray_tracer.up();
+    {
+      let ray_tracer = self.linker.get_ray_tracer_as_mut();
+      
+      let forward = ray_tracer.forward();
+      let right = ray_tracer.right();
+      let up = ray_tracer.up();
 
-    crate::movement::move_and_rotate(
-      &ctx.input(),
-      &mut ray_tracer.camera,
-      &mut ray_tracer.rotation,
-      forward,
-      right,
-      up,
-      delta_time * 1.5,
-      delta_time * 4.,
-    );
+      crate::movement::move_and_rotate(
+        &ctx.input(),
+        &mut ray_tracer.camera,
+        &mut ray_tracer.rotation,
+        forward,
+        right,
+        up,
+        delta_time * 1.5,
+        delta_time * 4.,
+      );
 
-    if ray_tracer.scene.do_objects_spin {
-      ray_tracer.scene.objects.iter_mut().for_each(|object| {
-        let position = object.geometry.position_as_mut();
-        let length = position.length();
+      if ray_tracer.scene.do_objects_spin {
+        ray_tracer.scene.objects.iter_mut().for_each(|object| {
+          let position = object.geometry.position_as_mut();
+          let length = position.length();
 
-        let theta: f64 = 0.5 * std::f64::consts::PI * delta_time;
+          let theta: f64 = 0.5 * std::f64::consts::PI * delta_time;
 
-        *position = position.transform_point(Mat44::create_rotation(Axis::Y, theta));
+          *position = position.transform_point(Mat44::create_rotation(Axis::Y, theta));
 
-        // fix rounding errors?
-        *position = *position * (length / position.length());
-      });
+          // fix rounding errors?
+          *position = *position * (length / position.length());
+        });
+      }
     }
-
-    let settings_panel = |ui: &mut egui::Ui| {
-      ui.heading("Settings");
-
-      ui.label(format!("fps: {}", 1. / frame_times.average().unwrap_or(1.)));
-
-      ui.separator();
-
-      ui.horizontal(|ui| {
-        let mut new_width = ray_tracer.width;
-        let mut new_height = ray_tracer.height;
-
-        ui.label("width");
-        ui.add(egui::DragValue::new(&mut new_width)
-          .speed(20));
-        ui.label("height");
-        ui.add(egui::DragValue::new(&mut new_height)
-          .speed(20));
-
-        if new_width != ray_tracer.width || new_height != ray_tracer.height {
-          has_size_changed = true;
-          ray_tracer.width = new_width;
-          ray_tracer.height = new_height;
-        }
-      });
-
-      ui.separator();
-
-      vec3_widget(ui, "pos", &mut ray_tracer.camera);
-      vec3_widget(ui, "rot", &mut ray_tracer.rotation);
-
-      ui.separator();
-
-      ui.horizontal(|ui| {
-        ui.label("bounces");
-        ui.add(egui::DragValue::new(&mut ray_tracer.scene.reflection_limit)
-          .clamp_range::<u32>(0..=10));
-      });
-    };
-
-    let object_panel = |ui: &mut egui::Ui| {
-      ui.horizontal(|ui| {
-        if ui.add(egui::Button::new("➕ sphere")).clicked() {
-          ray_tracer.scene.objects.push(Object {
-            name: String::from("sphere"),
-            material: Material {
-              colour: (1., 0., 0.),
-              specular: 500.,
-              metallic: 0.5,
-            },
-            geometry: Geometry::Sphere {
-              center: Vec3 { x: 0., y: 0., z: 0., },
-              radius: 1.,
-            },
-          });
-        }
-        if ui.add(egui::Button::new("➕ plane")).clicked() {
-          ray_tracer.scene.objects.push(Object {
-            name: String::from("plane"),
-            material: Material {
-              colour: (1., 0., 0.),
-              specular: 500.,
-              metallic: 0.5,
-            },
-            geometry: Geometry::Plane {
-              center: Vec3 { x: 0., y: 0., z: 0., },
-              normal: Vec3 { x: 0., y: 1., z: 0., },
-              size: 5.,
-            },
-          });
-        }
-        if ui.add(egui::Button::new("print")).clicked() {
-          println!("{:#?}", ray_tracer.scene.objects);
-        }
-      });
-
-      ui.separator();
-
-      ui.checkbox(&mut ray_tracer.scene.do_objects_spin, "spin");
-
-      ui.separator();
-
-      let mut has_removed_object = false;
-
-      for i in 0..ray_tracer.scene.objects.len() {
-        let index = if has_removed_object { i - 1 } else { i };
-
-        ui.horizontal(|ui| {
-          ui.label(&ray_tracer.scene.objects[index].name);
-
-          if ui.add(egui::Button::new("❌")).clicked() {
-            ray_tracer.scene.objects.remove(index);
-            has_removed_object = true;
-          }
-        });
-
-        vec3_widget(ui, "pos", ray_tracer.scene.objects[index].geometry.position_as_mut());
-
-        if has_removed_object {
-          continue;
-        }
-
-        let object = &mut ray_tracer.scene.objects[index];
-
-        match &mut object.geometry {
-          Geometry::Sphere { center: _, radius } => {
-            ui.horizontal(|ui| {
-              ui.label("radius");
-              ui.add(egui::DragValue::new(radius)
-                .fixed_decimals(1)
-                .speed(0.1));
-            });
-          },
-          Geometry::Plane { center: _, normal, size } => {
-            ui.horizontal(|ui| {
-              ui.label("normal");
-              ui.add(egui::DragValue::new(&mut normal.x)
-                .fixed_decimals(1)
-                .speed(0.1));
-              ui.add(egui::DragValue::new(&mut normal.y)
-                .fixed_decimals(1)
-                .speed(0.1));
-              ui.add(egui::DragValue::new(&mut normal.z)
-                .fixed_decimals(1)
-                .speed(0.1));
-              
-              *normal = normal.normalize();
-            });
-
-            ui.horizontal(|ui| {
-              ui.label("size");
-              ui.add(egui::DragValue::new(size)
-                .fixed_decimals(1)
-                .speed(0.1));
-            });
-          }
-        }
-
-        ui.horizontal(|ui| {
-          ui.label("col");
-
-          let mut colour = [object.material.colour.0 as f32, object.material.colour.1 as f32, object.material.colour.2 as f32];
-
-          ui.color_edit_button_rgb(&mut colour);
-
-          object.material.colour = (colour[0] as f64, colour[1] as f64, colour[2] as f64);
-
-          ui.label("spec");
-          ui.add(egui::DragValue::new(&mut object.material.specular)
-            .clamp_range::<f64>(0.0..=1000.));
-          
-          ui.label("met");
-          ui.add(egui::DragValue::new(&mut object.material.metallic)
-            .clamp_range::<f64>(0.0..=1.)
-            .speed(0.1));
-        });
-
-        ui.separator();
-      };
-    };
 
     if is_portrait {
       egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
-        egui::SidePanel::left("object_panel").show_inside(ui, object_panel);
-        egui::SidePanel::right("settings_panel").show_inside(ui, settings_panel);
+        egui::SidePanel::left("object_panel")
+          .show_inside(ui, |ui| object_panel(ui, &mut self.linker.get_ray_tracer_as_mut().scene));
+        egui::SidePanel::right("settings_panel")
+          .show_inside(ui, |ui| settings_panel(ui, &mut self.linker, &mut has_size_changed));
       });
     } else {
-      egui::SidePanel::right("settings_panel").show(ctx, settings_panel);
-      egui::SidePanel::right("object_panel").show(ctx, object_panel);
+      egui::SidePanel::right("settings_panel")
+        .show(ctx, |ui| settings_panel(ui, &mut self.linker, &mut has_size_changed));
+      egui::SidePanel::right("object_panel")
+        .show(ctx, |ui| object_panel(ui, &mut self.linker.get_ray_tracer_as_mut().scene));
     }
 
     egui::CentralPanel::default().show(ctx, |ui| {
       ui.set_max_width(f32::INFINITY);
       ui.set_max_height(f32::INFINITY);
+      let texture = self.linker.get_texture();
       match texture {
-        Some(texture) => {
+        Some(_) => {
           egui::Resize::default()
-            .default_size((ray_tracer.width as f32, ray_tracer.height as f32))
+            .default_size((self.linker.get_ray_tracer().width as f32, self.linker.get_ray_tracer().height as f32))
             .show(ui, |ui| {
               if !has_size_changed {
+                let ray_tracer = self.linker.get_ray_tracer_as_mut();
                 ray_tracer.width = ui.available_width() as u32;
                 ray_tracer.height = ui.available_height() as u32;
               }
 
-              ray_tracer.rs_render(image);
+              self.linker.render_frame();
 
-              texture.set(eframe::epaint::ImageData::Color(image.clone()));
-              ui.add(egui::Image::new(&*texture, texture.size_vec2()));
+              self.linker.set_texture(eframe::epaint::ImageData::Color(self.linker.get_image().clone()));
+
+              // (*texture).set(eframe::epaint::ImageData::Color(self.linker.get_image().clone()));
+              let texture = self.linker.get_texture().as_ref().unwrap();
+
+              ui.add(egui::Image::new(texture.id(), texture.size_vec2()));
             });
         },
         None => (),

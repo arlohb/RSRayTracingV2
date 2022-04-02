@@ -4,6 +4,7 @@ pub use app::TemplateApp;
 pub mod ray_tracer;
 pub mod movement;
 pub mod linker;
+pub mod panels;
 
 // ----------------------------------------------------------------------------
 // When compiling for web:
