@@ -8,10 +8,9 @@ const renderImage = async () => {
 }
 
 (async () => {
-  console.log("Loading egui");
+  console.log("Loading main thread wasm");
   const egui = await import("../dist/pkg/rs_ray_tracing_v2.js");
 
-  // effectively wasm.init();
   const memory = (await egui.default()).memory;
 
   console.log("Creating worker");
@@ -19,7 +18,7 @@ const renderImage = async () => {
     type: "module"
   });
 
-  console.log("Exposing worker");
+  console.log("Wrapping worker in comlink");
   link = Comlink.wrap(worker);
 
   console.log("Running worker");
@@ -180,7 +179,5 @@ const renderImage = async () => {
 
   console.log("Starting egui");
   egui.start("the_canvas_id");
-
-  console.log("Egui started");
   document.getElementById("center_text").remove();
 })();
