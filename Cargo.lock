@@ -1611,6 +1611,7 @@ dependencies = [
  "tracing-wasm",
  "wasm-bindgen",
  "wasm-bindgen-rayon",
+ "web-sys",
 ]
 
 [[package]]

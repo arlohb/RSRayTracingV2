@@ -6,6 +6,8 @@ pub mod movement;
 pub mod linker;
 pub mod panels;
 
+use web_sys;
+
 // ----------------------------------------------------------------------------
 // When compiling for web:
 
@@ -26,6 +28,10 @@ pub fn start(canvas_id: &str) -> Result<(), eframe::wasm_bindgen::JsValue> {
 
   // Redirect tracing to console.log and friends:
   tracing_wasm::set_as_global_default();
+
+  let test = web_sys::window().expect("No window")
+    .get("test").expect("Test property doesn't exist on window")
+    .as_string().unwrap();
 
   let app = TemplateApp::default();
   eframe::start_web(canvas_id, Box::new(app))

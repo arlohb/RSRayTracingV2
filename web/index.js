@@ -19,6 +19,8 @@ import * as Comlink from "comlink";
   await link.init();
   await link.initThreadPool();
 
+  window.test = "hello";
+
   console.log("Starting egui");
   egui.start("the_canvas_id");
 
