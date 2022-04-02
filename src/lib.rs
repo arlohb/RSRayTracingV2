@@ -9,9 +9,6 @@ pub mod panels;
 // ----------------------------------------------------------------------------
 // When compiling for web:
 
-#[cfg(target_arch="wasm32")]
-use web_sys;
-
 #[cfg(target_arch = "wasm32")]
 pub use wasm_bindgen_rayon::init_thread_pool;
 #[cfg(target_arch = "wasm32")]

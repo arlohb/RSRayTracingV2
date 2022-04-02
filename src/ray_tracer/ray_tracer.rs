@@ -3,7 +3,6 @@ use rayon::prelude::*;
 #[cfg(target_arch="wasm32")]
 use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
-use serde_json::Result;
 
 use crate::ray_tracer::*;
 
