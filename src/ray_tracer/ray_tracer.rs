@@ -386,6 +386,8 @@ impl Options {
 #[cfg(target_arch="wasm32")]
 #[wasm_bindgen]
 pub fn render_image () {
+  let start: f64 = crate::performance.now();
+
   let options = crate::OPTIONS.lock().unwrap().clone();
 
   let ray_tracer = RayTracer {
@@ -404,4 +406,8 @@ pub fn render_image () {
   let image_global = &mut crate::IMAGE.lock().unwrap();
   image_global.size = image.size;
   image_global.pixels = image.pixels;
+
+  let end: f64 = crate::performance.now();
+  let frame_time = end - start;
+  crate::FRAME_TIMES.lock().unwrap().add(end, frame_time as f32);
 }
