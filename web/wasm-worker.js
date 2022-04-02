@@ -18,7 +18,8 @@ const initThreadPool = async () => {
 }
 
 const renderImage = async () => {
-  return await wasm.render_image();
+  await wasm.render_image();
+  setTimeout(renderImage, 1);
 }
 
 Comlink.expose({

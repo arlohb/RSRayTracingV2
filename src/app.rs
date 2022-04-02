@@ -213,9 +213,12 @@ impl epi::App for TemplateApp {
                 ray_tracer.height = ui.available_height() as u32;
               }
 
-              let image = crate::IMAGE.lock().unwrap().clone();
-
-              texture.set(eframe::epaint::ImageData::Color(image));
+              match crate::IMAGE.try_lock() {
+                Ok(image) => {
+                  texture.set(eframe::epaint::ImageData::Color(image.clone()));
+                },
+                Err(_) => (),
+              };
 
               ui.add(egui::Image::new(texture.id(), texture.size_vec2()));
             });
@@ -224,12 +227,17 @@ impl epi::App for TemplateApp {
       }
     });
 
-    crate::OPTIONS.lock().unwrap().camera = self.ray_tracer.camera;
-    crate::OPTIONS.lock().unwrap().rotation = self.ray_tracer.rotation;
-    crate::OPTIONS.lock().unwrap().fov = self.ray_tracer.fov;
-    crate::OPTIONS.lock().unwrap().width = self.ray_tracer.width;
-    crate::OPTIONS.lock().unwrap().height = self.ray_tracer.height;
-    crate::OPTIONS.lock().unwrap().scene = self.ray_tracer.scene.clone();
+    match crate::OPTIONS.try_lock() {
+      Ok(mut options) => {
+        options.camera = self.ray_tracer.camera;
+        options.rotation = self.ray_tracer.rotation;
+        options.fov = self.ray_tracer.fov;
+        options.width = self.ray_tracer.width;
+        options.height = self.ray_tracer.height;
+        options.scene = self.ray_tracer.scene.clone()
+      },
+      Err(_) => (),
+    }
 
     ctx.request_repaint();
   }

@@ -1,12 +1,5 @@
 import * as Comlink from "comlink";
 
-let link;
-
-const renderImage = async () => {
-  await link.renderImage();
-  setTimeout(renderImage, 10);
-}
-
 (async () => {
   console.log("Loading main thread wasm");
   const egui = await import("../dist/pkg/rs_ray_tracing_v2.js");
@@ -19,7 +12,7 @@ const renderImage = async () => {
   });
 
   console.log("Wrapping worker in comlink");
-  link = Comlink.wrap(worker);
+  const link = Comlink.wrap(worker);
 
   console.log("Running worker");
   await link.init(memory);
@@ -175,7 +168,7 @@ const renderImage = async () => {
   });
 
   // this will only await the first one
-  await renderImage();
+  await link.renderImage();
 
   console.log("Starting egui");
   egui.start("the_canvas_id");
