@@ -254,7 +254,7 @@ impl RayTracer {
     });
 
     #[cfg(target_arch = "wasm32")]
-    image.pixels.iter_mut().enumerate().for_each(|(index, colour)| {
+    image.pixels.par_iter_mut().enumerate().for_each(|(index, colour)| {
       let y = (index as u32) / (self.width as u32);
       let x = index as u32 % self.width;
 
