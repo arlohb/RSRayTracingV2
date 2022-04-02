@@ -1,5 +1,5 @@
 use eframe::egui;
-use crate::{ray_tracer::*, linker::Linker};
+use crate::ray_tracer::*;
 
 fn vec3_widget(ui: &mut egui::Ui, label: impl Into<egui::WidgetText>, vec3: &mut Vec3) {
   ui.horizontal(|ui| {
@@ -142,14 +142,12 @@ pub fn object_panel (ui: &mut egui::Ui, scene: &mut Scene) {
   };
 }
 
-pub fn settings_panel (ui: &mut egui::Ui, linker: &mut Linker, has_size_changed: &mut bool) {
+pub fn settings_panel (ui: &mut egui::Ui, average_frame_time: f32, ray_tracer: &mut RayTracer, has_size_changed: &mut bool) {
   ui.heading("Settings");
 
-  ui.label(format!("fps: {}", 1. / linker.average_frame_time()));
+  ui.label(format!("fps: {}", 1. / average_frame_time));
 
   ui.separator();
-
-  let ray_tracer = linker.get_ray_tracer_as_mut();
 
   ui.horizontal(|ui| {
 

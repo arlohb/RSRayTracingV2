@@ -2,7 +2,7 @@ use eframe::{egui, epi};
 use rayon::prelude::*;
 #[cfg(target_arch="wasm32")]
 use wasm_bindgen::prelude::*;
-use crate::{ray_tracer::*, linker::Linker, panels::*};
+use crate::{ray_tracer::*, panels::*};
 
 #[cfg_attr(target_arch="wasm32", wasm_bindgen)]
 pub fn thread_test() -> u64 {
@@ -14,17 +14,118 @@ pub fn thread_test() -> u64 {
 }
 
 pub struct TemplateApp {
-  // ray_tracer: RayTracer,
-  // image: eframe::epaint::ColorImage,
-  // texture: Option<eframe::epaint::TextureHandle>,
-  // frame_times: egui::util::History<f32>,
-  linker: Linker
+  ray_tracer: RayTracer,
+  image: eframe::epaint::ColorImage,
+  texture: Option<eframe::epaint::TextureHandle>,
+  frame_times: egui::util::History<f32>,
 }
 
 impl Default for TemplateApp {
   fn default() -> Self {
+    let width = 400;
+    let height = 300;
     Self {
-      linker: Linker::new(400, 300),
+      ray_tracer: RayTracer {
+        camera: Vec3 { x: 5., y: 5., z: 5. },
+        rotation: Vec3 { x: 0.7, y: -std::f64::consts::PI / 4., z: 0. },
+        fov: 70.,
+        width,
+        height,
+        scene: Scene {
+          objects: vec![
+            Object {
+                name: "sphere".to_string(),
+                material: Material {
+                    colour: (
+                        1.0,
+                        0.5212054252624512,
+                        0.0,
+                    ),
+                    specular: 5.0,
+                    metallic: 1.0,
+                },
+                geometry: Geometry::Sphere {
+                    center: Vec3 {
+                        x: 1.5,
+                        y: 0.0,
+                        z: 0.0,
+                    },
+                    radius: 1.0,
+                },
+            },
+            Object {
+                name: "sphere".to_string(),
+                material: Material {
+                    colour: (
+                        1.0,
+                        0.3486607074737549,
+                        0.0,
+                    ),
+                    specular: 800.0,
+                    metallic: 0.2,
+                },
+                geometry: Geometry::Sphere {
+                    center: Vec3 {
+                        x: 3.1,
+                        y: 0.0,
+                        z: 2.1,
+                    },
+                    radius: 1.0,
+                },
+            },
+            Object {
+                name: "sphere".to_string(),
+                material: Material {
+                    colour: (
+                        0.0,
+                        0.6445307731628418,
+                        1.0,
+                    ),
+                    specular: 80.0,
+                    metallic: 0.,
+                },
+                geometry: Geometry::Sphere {
+                    center: Vec3 {
+                        x: -8.3,
+                        y: 0.0,
+                        z: 0.0,
+                    },
+                    radius: 1.0,
+                },
+            },
+            Object {
+              name: "plane".to_string(),
+              material: Material {
+                colour: (0.8, 0.8, 1.),
+                specular: 50.,
+                metallic: 0.2,
+              },
+              geometry: Geometry::Plane {
+                center: Vec3 { x: 0., y: -1.5, z: 0. },
+                normal: Vec3 { x: 0., y: 1., z: 0. },
+                size: 5.,
+              },
+            },
+        ],
+          lights: vec![
+            Light::Direction {
+              intensity: (0.4, 0.4, 0.4),
+              direction: Vec3 { x: -1., y: -1.5, z: -0.5 }.normalize(),
+            },
+            Light::Point {
+              intensity: (0.4, 0.4, 0.4),
+              position: Vec3 { x: 0., y: 2., z: 0., },
+            },
+          ],
+          background_colour: (0.5, 0.8, 1.),
+          ambient_light: (0.2, 0.2, 0.2),
+          reflection_limit: 4,
+          do_objects_spin: false,
+        },
+      },
+      frame_times: egui::util::History::new(0..usize::MAX, 20.),
+      image: eframe::epaint::ColorImage::new([width as usize, height as usize], eframe::epaint::Color32::BLACK),
+      texture: None,
     }
   }
 }
@@ -46,8 +147,8 @@ impl epi::App for TemplateApp {
       style.visuals = egui::Visuals::dark();
       style
     });
-    let image = self.linker.get_image().clone();
-    self.linker.create_texture(ctx.load_texture("canvas", image));
+    let image = self.image.clone();
+    self.texture = Some(ctx.load_texture("canvas", image));
   }
 
   /// Called each time the UI needs repainting, which may be many times per second.
@@ -57,13 +158,13 @@ impl epi::App for TemplateApp {
     let is_portrait = screen_rect.height() > screen_rect.width();
     
     let previous_frame_time = frame.info().cpu_usage.unwrap_or(0.);
-    self.linker.add_frame_time(ctx.input().time, previous_frame_time);
+    self.frame_times.add(ctx.input().time, previous_frame_time);
     let delta_time = previous_frame_time.max(1. / 60.) as f64;
     
     let mut has_size_changed = false;
 
     {
-      let ray_tracer = self.linker.get_ray_tracer_as_mut();
+      let ray_tracer = &mut self.ray_tracer;
       
       let forward = ray_tracer.forward();
       let right = ray_tracer.right();
@@ -98,28 +199,28 @@ impl epi::App for TemplateApp {
     if is_portrait {
       egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
         egui::SidePanel::left("object_panel")
-          .show_inside(ui, |ui| object_panel(ui, &mut self.linker.get_ray_tracer_as_mut().scene));
+          .show_inside(ui, |ui| object_panel(ui, &mut self.ray_tracer.scene));
         egui::SidePanel::right("settings_panel")
-          .show_inside(ui, |ui| settings_panel(ui, &mut self.linker, &mut has_size_changed));
+          .show_inside(ui, |ui| settings_panel(ui, self.frame_times.average().unwrap_or(1.), &mut self.ray_tracer, &mut has_size_changed));
       });
     } else {
       egui::SidePanel::right("settings_panel")
-        .show(ctx, |ui| settings_panel(ui, &mut self.linker, &mut has_size_changed));
+        .show(ctx, |ui| settings_panel(ui, self.frame_times.average().unwrap_or(1.), &mut self.ray_tracer, &mut has_size_changed));
       egui::SidePanel::right("object_panel")
-        .show(ctx, |ui| object_panel(ui, &mut self.linker.get_ray_tracer_as_mut().scene));
+        .show(ctx, |ui| object_panel(ui, &mut self.ray_tracer.scene));
     }
 
     egui::CentralPanel::default().show(ctx, |ui| {
       ui.set_max_width(f32::INFINITY);
       ui.set_max_height(f32::INFINITY);
-      let texture = self.linker.get_texture();
+      let texture = &mut self.texture;
       match texture {
-        Some(_) => {
+        Some(texture) => {
           egui::Resize::default()
-            .default_size((self.linker.get_ray_tracer().width as f32, self.linker.get_ray_tracer().height as f32))
+            .default_size((self.ray_tracer.width as f32, self.ray_tracer.height as f32))
             .show(ui, |ui| {
               if !has_size_changed {
-                let ray_tracer = self.linker.get_ray_tracer_as_mut();
+                let ray_tracer = &mut self.ray_tracer;
                 ray_tracer.width = ui.available_width() as u32;
                 ray_tracer.height = ui.available_height() as u32;
               }
@@ -143,10 +244,7 @@ impl epi::App for TemplateApp {
 
               let image = eframe::epaint::ColorImage::from_rgba_unmultiplied([400, 300], &data);
 
-              self.linker.set_texture(eframe::epaint::ImageData::Color(image));
-
-              // (*texture).set(eframe::epaint::ImageData::Color(self.linker.get_image().clone()));
-              let texture = self.linker.get_texture().as_ref().unwrap();
+              texture.set(eframe::epaint::ImageData::Color(image));
 
               ui.add(egui::Image::new(texture.id(), texture.size_vec2()));
             });
