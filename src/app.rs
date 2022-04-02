@@ -225,24 +225,7 @@ impl epi::App for TemplateApp {
                 ray_tracer.height = ui.available_height() as u32;
               }
 
-              // self.linker.render_frame();
-
-              let image: Vec<(u8, u8, u8, u8)> = serde_json::from_str(
-                &web_sys::window().expect("No window")
-                  .get("rayTracerImage").expect("Property doesn't exist on window")
-                  .as_string().unwrap()
-              ).expect("Failed to parse image");
-
-              let mut data: Vec<u8> = vec![];
-
-              image.iter().for_each(|(r, g, b, a)| {
-                data.push(*r);
-                data.push(*g);
-                data.push(*b);
-                data.push(*a);
-              });
-
-              let image = eframe::epaint::ColorImage::from_rgba_unmultiplied([400, 300], &data);
+              let image = crate::IMAGE.lock().unwrap().clone();
 
               texture.set(eframe::epaint::ImageData::Color(image));
 
@@ -253,23 +236,12 @@ impl epi::App for TemplateApp {
       }
     });
 
-    let options: Options = Options {
-      rotation: self.ray_tracer.rotation,
-      fov: self.ray_tracer.fov,
-      width: self.ray_tracer.width,
-      height: self.ray_tracer.height,
-      scene: self.ray_tracer.scene.clone(),
-      camera: self.ray_tracer.camera,
-    };
-
-    js_sys::Reflect::set(
-      &JsValue::from(web_sys::window().unwrap()),
-      &JsValue::from("rayTracerOptions"),
-      &JsValue::from_str(serde_json::to_string(&options).unwrap().as_str()),
-    ).unwrap();
-
-    crate::TEST.lock().unwrap().add();
-    crate::log!("Thread ID {}, TEST = {}", std::thread::current().id().as_u64(), crate::TEST.lock().unwrap().values.len());
+    crate::OPTIONS.lock().unwrap().camera = self.ray_tracer.camera;
+    crate::OPTIONS.lock().unwrap().rotation = self.ray_tracer.rotation;
+    crate::OPTIONS.lock().unwrap().fov = self.ray_tracer.fov;
+    crate::OPTIONS.lock().unwrap().width = self.ray_tracer.width;
+    crate::OPTIONS.lock().unwrap().height = self.ray_tracer.height;
+    crate::OPTIONS.lock().unwrap().scene = self.ray_tracer.scene.clone();
 
     ctx.request_repaint();
   }

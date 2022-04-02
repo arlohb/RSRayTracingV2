@@ -270,15 +270,7 @@ impl RayTracer {
 }
 
 #[cfg(target_arch="wasm32")]
-#[derive(Deserialize, Serialize)]
-// pub struct Options {
-//   pub camera: Vec3,
-//   pub rotation: Vec3,
-//   pub fov: f64,
-//   pub width: u32,
-//   pub height: u32,
-//   pub scene: Scene,
-// }
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Options {
   pub camera: Vec3,
   pub rotation: Vec3,
@@ -288,18 +280,113 @@ pub struct Options {
   pub scene: Scene,
 }
 
+impl Options {
+  pub fn new(width: u32, height: u32) -> Options {
+    Options {
+      camera: Vec3 { x: 5., y: 5., z: 5. },
+      rotation: Vec3 { x: 0.7, y: -std::f64::consts::PI / 4., z: 0. },
+      fov: 70.,
+      width,
+      height,
+      scene: Scene {
+        objects: vec![
+          Object {
+            name: "sphere".to_string(),
+            material: Material {
+              colour: (
+                1.0,
+                0.5212054252624512,
+                0.0,
+              ),
+              specular: 5.0,
+              metallic: 1.0,
+            },
+            geometry: Geometry::Sphere {
+              center: Vec3 {
+                x: 1.5,
+                y: 0.0,
+                z: 0.0,
+              },
+              radius: 1.0,
+            },
+          },
+          Object {
+            name: "sphere".to_string(),
+            material: Material {
+              colour: (
+                1.0,
+                0.3486607074737549,
+                0.0,
+              ),
+              specular: 800.0,
+              metallic: 0.2,
+            },
+            geometry: Geometry::Sphere {
+              center: Vec3 {
+                x: 3.1,
+                y: 0.0,
+                z: 2.1,
+              },
+              radius: 1.0,
+            },
+          },
+          Object {
+            name: "sphere".to_string(),
+            material: Material {
+              colour: (
+                0.0,
+                0.6445307731628418,
+                1.0,
+              ),
+              specular: 80.0,
+              metallic: 0.,
+            },
+            geometry: Geometry::Sphere {
+              center: Vec3 {
+                x: -8.3,
+                y: 0.0,
+                z: 0.0,
+              },
+              radius: 1.0,
+            },
+          },
+          Object {
+            name: "plane".to_string(),
+            material: Material {
+              colour: (0.8, 0.8, 1.),
+              specular: 50.,
+              metallic: 0.2,
+            },
+            geometry: Geometry::Plane {
+              center: Vec3 { x: 0., y: -1.5, z: 0. },
+              normal: Vec3 { x: 0., y: 1., z: 0. },
+              size: 5.,
+            },
+          },
+        ],
+        lights: vec![
+          Light::Direction {
+            intensity: (0.4, 0.4, 0.4),
+            direction: Vec3 { x: -1., y: -1.5, z: -0.5 }.normalize(),
+          },
+          Light::Point {
+            intensity: (0.4, 0.4, 0.4),
+            position: Vec3 { x: 0., y: 2., z: 0., },
+          },
+        ],
+        background_colour: (0.5, 0.8, 1.),
+        ambient_light: (0.2, 0.2, 0.2),
+        reflection_limit: 4,
+        do_objects_spin: false,
+      },
+    }
+  }
+}
+
 #[cfg(target_arch="wasm32")]
 #[wasm_bindgen]
-pub fn render_image (options: &str) -> String {
-  // crate::TEST.lock().unwrap().add();
-  crate::log!("Thread ID {}, TEST = {}", std::thread::current().id().as_u64(), crate::TEST.lock().unwrap().values.len());
-
-  // return options.to_string();
-  let options: Options = serde_json::from_str(options).expect("Failed to parse options");
-
-  // return serde_json::to_string_pretty(&options).unwrap();
-
-  let mut image = eframe::epaint::ColorImage::new([options.width as usize, options.height as usize], eframe::epaint::Color32::BLACK);
+pub fn render_image () {
+  let options = crate::OPTIONS.lock().unwrap().clone();
 
   let ray_tracer = RayTracer {
     camera: options.camera,
@@ -310,11 +397,9 @@ pub fn render_image (options: &str) -> String {
     scene: options.scene,
   };
 
+  let mut image = crate::IMAGE.lock().unwrap().clone();
+
   ray_tracer.rs_render(&mut image);
 
-  let image_data: Vec<(u8, u8, u8, u8)> = image.pixels.par_iter_mut().map(|pixel| {
-    pixel.to_tuple()
-  }).collect();
-
-  serde_json::to_string(&image_data).unwrap()
+  crate::IMAGE.lock().unwrap().pixels = image.pixels;
 }

@@ -10,23 +10,10 @@ pub mod panels;
 use once_cell::sync::Lazy;
 use std::sync::Mutex;
 
-struct Test {
-  pub values: Vec<i32>,
-}
+use ray_tracer::Options;
 
-impl Test {
-  pub fn new() -> Self {
-    Self {
-      values: vec![],
-    }
-  }
-
-  pub fn add(&mut self) {
-    self.values.push(10);
-  }
-}
-
-static TEST: Lazy<Mutex<Test>> = Lazy::new(|| Mutex::new(Test::new()));
+static OPTIONS: Lazy<Mutex<Options>> = Lazy::new(|| Mutex::new(Options::new(400, 300)));
+static IMAGE: Lazy<Mutex<eframe::epaint::image::ColorImage>> = Lazy::new(|| Mutex::new(eframe::epaint::image::ColorImage::new([400, 300], eframe::epaint::Color32::BLACK)));
 
 #[macro_export]
 macro_rules! log {
@@ -53,8 +40,6 @@ pub fn start(canvas_id: &str) -> Result<(), eframe::wasm_bindgen::JsValue> {
 
   // Redirect tracing to console.log and friends:
   tracing_wasm::set_as_global_default();
-
-  log!("TEST in start: {:?}", TEST.lock().unwrap().values.len());
 
   let app = TemplateApp::default();
   eframe::start_web(canvas_id, Box::new(app))

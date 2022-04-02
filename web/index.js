@@ -3,7 +3,7 @@ import * as Comlink from "comlink";
 let link;
 
 const renderImage = async () => {
-  window.rayTracerImage = await link.renderImage(window.rayTracerOptions);
+  await link.renderImage();
   setTimeout(renderImage, 10);
 }
 

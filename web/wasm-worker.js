@@ -17,8 +17,8 @@ const initThreadPool = async () => {
   console.log("   Thread pool initialised");
 }
 
-const renderImage = async (options) => {
-  return await wasm.render_image(options);
+const renderImage = async () => {
+  return await wasm.render_image();
 }
 
 Comlink.expose({
