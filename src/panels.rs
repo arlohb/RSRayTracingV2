@@ -142,10 +142,10 @@ pub fn object_panel (ui: &mut egui::Ui, scene: &mut Scene) {
   };
 }
 
-pub fn settings_panel (ui: &mut egui::Ui, average_frame_time: f32, ray_tracer: &mut RayTracer, has_size_changed: &mut bool) {
+pub fn settings_panel (ui: &mut egui::Ui, fps: f32, ray_tracer: &mut RayTracer, has_size_changed: &mut bool) {
   ui.heading("Settings");
 
-  ui.label(format!("fps: {}", 1. / average_frame_time));
+  ui.label(format!("fps: {}", fps));
 
   ui.separator();
 

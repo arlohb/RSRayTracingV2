@@ -4,7 +4,7 @@ use crate::{ray_tracer::*, panels::*};
 pub struct App {
   ray_tracer: RayTracer,
   texture: Option<eframe::epaint::TextureHandle>,
-  frame_times: egui::util::History<f32>,
+  last_time: f64,
 }
 
 impl Default for App {
@@ -110,8 +110,8 @@ impl Default for App {
           do_objects_spin: false,
         },
       },
-      frame_times: egui::util::History::new(0..usize::MAX, 20.),
       texture: None,
+      last_time: crate::performance.now(),
     }
   }
 }
@@ -137,15 +137,23 @@ impl epi::App for App {
 
   /// Called each time the UI needs repainting, which may be many times per second.
   /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
-  fn update(&mut self, ctx: &egui::Context, frame: &epi::Frame) {    
+  fn update(&mut self, ctx: &egui::Context, _: &epi::Frame) {    
     let screen_rect = ctx.input().screen_rect;
     let is_portrait = screen_rect.height() > screen_rect.width();
     
-    let previous_frame_time = frame.info().cpu_usage.unwrap_or(0.);
-    self.frame_times.add(ctx.input().time, previous_frame_time);
-    let delta_time = previous_frame_time.max(1. / 60.) as f64;
-    
     let mut has_size_changed = false;
+
+    let fps = match crate::FRAME_TIMES.try_lock() {
+      Ok(times) => {
+        1000. / times.average().unwrap_or(1.)
+      },
+      Err(_) => 1.,
+    };
+
+    let now = crate::performance.now();
+    // delta_time is in seconds
+    let delta_time = (now - self.last_time) / 1000.;
+    self.last_time = now;
 
     {
       let ray_tracer = &mut self.ray_tracer;
@@ -185,11 +193,11 @@ impl epi::App for App {
         egui::SidePanel::left("object_panel")
           .show_inside(ui, |ui| object_panel(ui, &mut self.ray_tracer.scene));
         egui::SidePanel::right("settings_panel")
-          .show_inside(ui, |ui| settings_panel(ui, self.frame_times.average().unwrap_or(1.), &mut self.ray_tracer, &mut has_size_changed));
+          .show_inside(ui, |ui| settings_panel(ui, fps, &mut self.ray_tracer, &mut has_size_changed));
       });
     } else {
       egui::SidePanel::right("settings_panel")
-        .show(ctx, |ui| settings_panel(ui, self.frame_times.average().unwrap_or(1.), &mut self.ray_tracer, &mut has_size_changed));
+        .show(ctx, |ui| settings_panel(ui, fps, &mut self.ray_tracer, &mut has_size_changed));
       egui::SidePanel::right("object_panel")
         .show(ctx, |ui| object_panel(ui, &mut self.ray_tracer.scene));
     }
