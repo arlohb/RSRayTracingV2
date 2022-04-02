@@ -1,9 +1,10 @@
 use eframe::{egui, epi};
 use rayon::prelude::*;
+#[cfg(target_arch="wasm32")]
 use wasm_bindgen::prelude::*;
 use crate::{ray_tracer::*, linker::Linker, panels::*};
 
-#[wasm_bindgen]
+#[cfg_attr(target_arch="wasm32", wasm_bindgen)]
 pub fn thread_test() -> u64 {
   let range: Vec<u64> = (0..=1000000).collect();
 
@@ -123,9 +124,26 @@ impl epi::App for TemplateApp {
                 ray_tracer.height = ui.available_height() as u32;
               }
 
-              self.linker.render_frame();
+              // self.linker.render_frame();
 
-              self.linker.set_texture(eframe::epaint::ImageData::Color(self.linker.get_image().clone()));
+              let image: Vec<(u8, u8, u8, u8)> = serde_json::from_str(
+                &web_sys::window().expect("No window")
+                  .get("rayTracerImage").expect("Property doesn't exist on window")
+                  .as_string().unwrap()
+              ).expect("Failed to parse image");
+
+              let mut data: Vec<u8> = vec![];
+
+              image.iter().for_each(|(r, g, b, a)| {
+                data.push(*r);
+                data.push(*g);
+                data.push(*b);
+                data.push(*a);
+              });
+
+              let image = eframe::epaint::ColorImage::from_rgba_unmultiplied([400, 300], &data);
+
+              self.linker.set_texture(eframe::epaint::ImageData::Color(image));
 
               // (*texture).set(eframe::epaint::ImageData::Color(self.linker.get_image().clone()));
               let texture = self.linker.get_texture().as_ref().unwrap();

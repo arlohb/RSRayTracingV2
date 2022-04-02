@@ -1,8 +1,9 @@
+#[cfg(target_arch="wasm32")]
 use wasm_bindgen::prelude::*;
 use eframe::egui;
 use crate::ray_tracer::*;
 
-#[wasm_bindgen]
+#[cfg_attr(target_arch="wasm32", wasm_bindgen)]
 pub struct Linker {
   ray_tracer: RayTracer,
   image: eframe::epaint::ColorImage,
@@ -10,7 +11,7 @@ pub struct Linker {
   frame_times: egui::util::History<f32>,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(target_arch="wasm32", wasm_bindgen)]
 impl Linker {
   pub fn new(width: u32, height: u32) -> Linker {
     Self {

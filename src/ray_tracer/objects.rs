@@ -1,17 +1,18 @@
+use serde::{Deserialize, Serialize};
 use crate::ray_tracer::{
   Vec3,
   Ray,
   solve_quadratic,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Material {
   pub colour: (f64, f64, f64),
   pub specular: f64,
   pub metallic: f64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub enum Geometry {
   Sphere {
     center: Vec3,
@@ -97,14 +98,14 @@ impl Geometry {
   }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Object {
   pub name: String,
   pub material: Material,
   pub geometry: Geometry,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub enum Light {
   Direction { intensity: (f64, f64, f64), direction: Vec3},
   Point { intensity: (f64, f64, f64), position: Vec3},

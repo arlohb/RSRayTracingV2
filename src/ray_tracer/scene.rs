@@ -1,8 +1,10 @@
+use serde::{Deserialize, Serialize};
 use crate::ray_tracer::{
   Light,
   Object,
 };
 
+#[derive(Deserialize, Serialize)]
 pub struct Scene {
   pub objects: Vec<Object>,
   pub lights: Vec<Light>,

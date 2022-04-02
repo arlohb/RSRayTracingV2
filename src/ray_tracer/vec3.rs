@@ -1,8 +1,9 @@
 use std::ops;
+use serde::{Deserialize, Serialize};
 
 use crate::ray_tracer::Mat44;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Deserialize, Serialize)]
 pub struct Vec3 {
   pub x: f64,
   pub y: f64,

@@ -1,15 +1,11 @@
 // #[cfg(not(target_arch = "wasm32"))]
 use rayon::prelude::*;
+#[cfg(target_arch="wasm32")]
+use wasm_bindgen::prelude::*;
+use serde::{Deserialize, Serialize};
+use serde_json::Result;
 
-use crate::ray_tracer::{
-  Vec3,
-  Material,
-  Object,
-  Ray,
-  Scene,
-  Mat44,
-  Axis,
-};
+use crate::ray_tracer::*;
 
 pub struct ImagePlane {
   pub left: Vec3,
@@ -272,4 +268,51 @@ impl RayTracer {
       );
     });
   }
+}
+
+#[cfg(target_arch="wasm32")]
+#[derive(Deserialize, Serialize)]
+// pub struct Options {
+//   pub camera: Vec3,
+//   pub rotation: Vec3,
+//   pub fov: f64,
+//   pub width: u32,
+//   pub height: u32,
+//   pub scene: Scene,
+// }
+pub struct Options {
+  pub camera: Vec3,
+  pub rotation: Vec3,
+  pub fov: f64,
+  pub width: u32,
+  pub height: u32,
+  pub scene: Scene,
+}
+
+#[cfg(target_arch="wasm32")]
+#[wasm_bindgen]
+pub fn render_image (options: &str) -> String {
+  // return options.to_string();
+  let options: Options = serde_json::from_str(options).expect("Failed to parse options");
+
+  // return serde_json::to_string_pretty(&options).unwrap();
+
+  let mut image = eframe::epaint::ColorImage::new([options.width as usize, options.height as usize], eframe::epaint::Color32::BLACK);
+
+  let ray_tracer = RayTracer {
+    camera: options.camera,
+    rotation: options.rotation,
+    fov: options.fov,
+    width: options.width,
+    height: options.height,
+    scene: options.scene,
+  };
+
+  ray_tracer.rs_render(&mut image);
+
+  let image_data: Vec<(u8, u8, u8, u8)> = image.pixels.par_iter_mut().map(|pixel| {
+    pixel.to_tuple()
+  }).collect();
+
+  serde_json::to_string(&image_data).unwrap()
 }
