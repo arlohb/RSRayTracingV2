@@ -16,6 +16,7 @@ import * as Comlink from "comlink";
   const link = Comlink.wrap(worker);
 
   console.log("Running worker");
+  await link.init();
   await link.initThreadPool();
 
   console.log("Starting egui");
@@ -23,4 +24,6 @@ import * as Comlink from "comlink";
 
   console.log("Egui started");
   document.getElementById("center_text").remove();
+
+  console.log(await link.threadTest());
 })();
