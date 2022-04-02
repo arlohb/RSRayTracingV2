@@ -4,7 +4,7 @@ use crate::ray_tracer::{
   Object,
 };
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Scene {
   pub objects: Vec<Object>,
   pub lights: Vec<Light>,

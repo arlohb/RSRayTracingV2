@@ -253,6 +253,21 @@ impl epi::App for TemplateApp {
       }
     });
 
+    let options: Options = Options {
+      rotation: self.ray_tracer.rotation,
+      fov: self.ray_tracer.fov,
+      width: self.ray_tracer.width,
+      height: self.ray_tracer.height,
+      scene: self.ray_tracer.scene.clone(),
+      camera: self.ray_tracer.camera,
+    };
+
+    js_sys::Reflect::set(
+      &JsValue::from(web_sys::window().unwrap()),
+      &JsValue::from("rayTracerOptions"),
+      &JsValue::from_str(serde_json::to_string(&options).unwrap().as_str()),
+    ).unwrap();
+
     ctx.request_repaint();
   }
 }

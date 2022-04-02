@@ -5,14 +5,14 @@ use crate::ray_tracer::{
   solve_quadratic,
 };
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Material {
   pub colour: (f64, f64, f64),
   pub specular: f64,
   pub metallic: f64,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum Geometry {
   Sphere {
     center: Vec3,
@@ -98,14 +98,14 @@ impl Geometry {
   }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Object {
   pub name: String,
   pub material: Material,
   pub geometry: Geometry,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum Light {
   Direction { intensity: (f64, f64, f64), direction: Vec3},
   Point { intensity: (f64, f64, f64), position: Vec3},
