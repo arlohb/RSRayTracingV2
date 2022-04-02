@@ -401,5 +401,7 @@ pub fn render_image () {
 
   ray_tracer.rs_render(&mut image);
 
-  crate::IMAGE.lock().unwrap().pixels = image.pixels;
+  let image_global = &mut crate::IMAGE.lock().unwrap();
+  image_global.size = image.size;
+  image_global.pixels = image.pixels;
 }
