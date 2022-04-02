@@ -11,7 +11,7 @@ const init = async (memory) => {
 
 const initThreadPool = async () => {
   console.log("   Initialising thread pool");
-  console.log("   navigator.hardwareConcurrency:", navigator.hardwareConcurrency);
+  console.log("   threads:", navigator.hardwareConcurrency);
   await wasm.initThreadPool(navigator.hardwareConcurrency);
 
   console.log("   Thread pool initialised");
