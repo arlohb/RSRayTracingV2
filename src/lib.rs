@@ -28,7 +28,6 @@ extern "C" {
   pub static performance:web_sys::Performance;
 }
 
-#[cfg(target_arch = "wasm32")]
 struct Time {}
 
 #[cfg(target_arch = "wasm32")]
@@ -37,10 +36,6 @@ impl Time {
     performance.now()
   }
 }
-
-#[cfg(not(target_arch = "wasm32"))]
-struct Time {}
-
 #[cfg(not(target_arch = "wasm32"))]
 impl Time {
   pub fn now() -> f64 {
