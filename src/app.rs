@@ -1,5 +1,5 @@
 use eframe::{egui, epi};
-use crate::{ray_tracer::*, panels::*};
+use crate::{ray_tracer::*, panels::*, Time};
 
 pub struct App {
   ray_tracer: RayTracer,
@@ -111,7 +111,7 @@ impl Default for App {
         },
       },
       texture: None,
-      last_time: crate::performance.now(),
+      last_time: Time::now(),
     }
   }
 }
@@ -150,7 +150,7 @@ impl epi::App for App {
       Err(_) => 1.,
     };
 
-    let now = crate::performance.now();
+    let now = Time::now();
     // delta_time is in seconds
     let delta_time = (now - self.last_time) / 1000.;
     self.last_time = now;

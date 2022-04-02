@@ -4,7 +4,7 @@ use rayon::prelude::*;
 use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::ray_tracer::*;
+use crate::{ray_tracer::*, Time};
 
 pub struct ImagePlane {
   pub left: Vec3,
@@ -239,21 +239,6 @@ impl RayTracer {
     let right = self.right();
     let up = self.up();
 
-    #[cfg(not(target_arch = "wasm32"))]
-    image.pixels.par_iter_mut().enumerate().for_each(|(index, colour)| {
-      let y = (index as u32) / (self.width as u32);
-      let x = index as u32 % self.width;
-
-      let pixel = self.render_pixel(x, y, top_left_point, width_world_space, height_world_space, right, up);
-
-      *colour = eframe::epaint::Color32::from_rgb(
-        (pixel.0 * 255.) as u8,
-        (pixel.1 * 255.) as u8,
-        (pixel.2 * 255.) as u8,
-      );
-    });
-
-    #[cfg(target_arch = "wasm32")]
     image.pixels.par_iter_mut().enumerate().for_each(|(index, colour)| {
       let y = (index as u32) / (self.width as u32);
       let x = index as u32 % self.width;
@@ -269,7 +254,6 @@ impl RayTracer {
   }
 }
 
-#[cfg(target_arch="wasm32")]
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Options {
   pub camera: Vec3,
@@ -383,10 +367,9 @@ impl Options {
   }
 }
 
-#[cfg(target_arch="wasm32")]
-#[wasm_bindgen]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub fn render_image () {
-  let start: f64 = crate::performance.now();
+  let start: f64 = Time::now();
 
   let options = crate::OPTIONS.lock().unwrap().clone();
 
@@ -407,7 +390,7 @@ pub fn render_image () {
   image_global.size = image.size;
   image_global.pixels = image.pixels;
 
-  let end: f64 = crate::performance.now();
+  let end: f64 = Time::now();
   let frame_time = end - start;
   crate::FRAME_TIMES.lock().unwrap().add(end, frame_time as f32);
 }

@@ -22,9 +22,32 @@ static FRAME_TIMES: Lazy<Mutex<eframe::egui::util::History<f32>>> = Lazy::new(||
   Mutex::new(eframe::egui::util::History::new(0..usize::MAX, 20.))
 );
 
+#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 extern "C" {
   pub static performance:web_sys::Performance;
+}
+
+#[cfg(target_arch = "wasm32")]
+struct Time {}
+
+#[cfg(target_arch = "wasm32")]
+impl Time {
+  pub fn now() -> f64 {
+    performance.now()
+  }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct Time {}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Time {
+  pub fn now() -> f64 {
+    std::time::SystemTime::now()
+      .duration_since(std::time::SystemTime::UNIX_EPOCH).unwrap()
+      .as_micros() as f64 / 1000.
+  }
 }
 
 #[cfg(target_arch = "wasm32")]
