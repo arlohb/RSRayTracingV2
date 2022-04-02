@@ -145,7 +145,7 @@ impl epi::App for App {
 
     let fps = match crate::FRAME_TIMES.try_lock() {
       Ok(times) => {
-        1000. / times.average().unwrap_or(1.)
+        1000. / times.average().unwrap_or(10.)
       },
       Err(_) => 1.,
     };

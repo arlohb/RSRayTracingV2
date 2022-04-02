@@ -19,7 +19,7 @@ static IMAGE: Lazy<Mutex<eframe::epaint::image::ColorImage>> = Lazy::new(||
   Mutex::new(eframe::epaint::image::ColorImage::new([400, 300], eframe::epaint::Color32::BLACK))
 );
 static FRAME_TIMES: Lazy<Mutex<eframe::egui::util::History<f32>>> = Lazy::new(||
-  Mutex::new(eframe::egui::util::History::new(0..usize::MAX, 20.))
+  Mutex::new(eframe::egui::util::History::new(0..usize::MAX, 1_000.)) // 1 second
 );
 
 #[cfg(target_arch = "wasm32")]
