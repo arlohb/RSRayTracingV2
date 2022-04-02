@@ -7,16 +7,16 @@ import * as Comlink from "comlink";
   // effectively wasm.init();
   await egui.default();
 
-  // console.log("Creating worker");
-  // const worker = new Worker(new URL("./wasm-worker.js", import.meta.url), {
-  //   type: "module"
-  // });
+  console.log("Creating worker");
+  const worker = new Worker(new URL("./wasm-worker.js", import.meta.url), {
+    type: "module"
+  });
 
-  // console.log("Exposing worker");
-  // const link = Comlink.wrap(worker);
+  console.log("Exposing worker");
+  const link = Comlink.wrap(worker);
 
-  // console.log("Running worker");
-  // await link.main();
+  console.log("Running worker");
+  await link.initThreadPool();
 
   console.log("Starting egui");
   egui.start("the_canvas_id");
