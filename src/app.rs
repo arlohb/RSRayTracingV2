@@ -3,7 +3,6 @@ use crate::{ray_tracer::*, panels::*};
 
 pub struct TemplateApp {
   ray_tracer: RayTracer,
-  image: eframe::epaint::ColorImage,
   texture: Option<eframe::epaint::TextureHandle>,
   frame_times: egui::util::History<f32>,
 }
@@ -112,7 +111,6 @@ impl Default for TemplateApp {
         },
       },
       frame_times: egui::util::History::new(0..usize::MAX, 20.),
-      image: eframe::epaint::ColorImage::new([width as usize, height as usize], eframe::epaint::Color32::BLACK),
       texture: None,
     }
   }
@@ -135,8 +133,6 @@ impl epi::App for TemplateApp {
       style.visuals = egui::Visuals::dark();
       style
     });
-    let image = self.image.clone();
-    self.texture = Some(ctx.load_texture("canvas", image));
   }
 
   /// Called each time the UI needs repainting, which may be many times per second.
@@ -223,7 +219,13 @@ impl epi::App for TemplateApp {
               ui.add(egui::Image::new(texture.id(), texture.size_vec2()));
             });
         },
-        None => (),
+        None => {
+          let image = eframe::epaint::ColorImage::new(
+            [self.ray_tracer.width as usize, self.ray_tracer.height as usize],
+            eframe::epaint::Color32::BLACK
+          );
+          self.texture = Some(ctx.load_texture("canvas", image));
+        },
       }
     });
 
