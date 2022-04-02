@@ -268,6 +268,9 @@ impl epi::App for TemplateApp {
       &JsValue::from_str(serde_json::to_string(&options).unwrap().as_str()),
     ).unwrap();
 
+    // crate::TEST.lock().unwrap().add();
+    // crate::log!("{}", crate::TEST.lock().unwrap().values.len());
+
     ctx.request_repaint();
   }
 }

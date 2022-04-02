@@ -5,6 +5,32 @@ pub mod ray_tracer;
 pub mod movement;
 pub mod panels;
 
+use once_cell::sync::Lazy;
+use std::sync::Mutex;
+
+struct Test {
+  pub values: Vec<i32>,
+}
+
+impl Test {
+  pub fn new() -> Self {
+    Self {
+      values: vec![],
+    }
+  }
+
+  pub fn add(&mut self) {
+    self.values.push(10);
+  }
+}
+
+static TEST: Lazy<Mutex<Test>> = Lazy::new(|| Mutex::new(Test::new()));
+
+#[macro_export]
+macro_rules! log {
+    ($($t:tt)*) => (web_sys::console::log_1(&format_args!($($t)*).to_string().into()))
+}
+
 // ----------------------------------------------------------------------------
 // When compiling for web:
 
@@ -25,6 +51,8 @@ pub fn start(canvas_id: &str) -> Result<(), eframe::wasm_bindgen::JsValue> {
 
   // Redirect tracing to console.log and friends:
   tracing_wasm::set_as_global_default();
+
+  log!("TEST in start: {:?}", TEST.lock().unwrap().values.len());
 
   let app = TemplateApp::default();
   eframe::start_web(canvas_id, Box::new(app))
