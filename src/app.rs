@@ -1,17 +1,5 @@
 use eframe::{egui, epi};
-use rayon::prelude::*;
-#[cfg(target_arch="wasm32")]
-use wasm_bindgen::prelude::*;
 use crate::{ray_tracer::*, panels::*};
-
-#[cfg_attr(target_arch="wasm32", wasm_bindgen)]
-pub fn thread_test() -> u64 {
-  let range: Vec<u64> = (0..=1000000).collect();
-
-  let x: u64 = range.par_iter().sum();
-
-  x
-}
 
 pub struct TemplateApp {
   ray_tracer: RayTracer,
