@@ -1,13 +1,13 @@
 use eframe::{egui, epi};
 use crate::{ray_tracer::*, panels::*};
 
-pub struct TemplateApp {
+pub struct App {
   ray_tracer: RayTracer,
   texture: Option<eframe::epaint::TextureHandle>,
   frame_times: egui::util::History<f32>,
 }
 
-impl Default for TemplateApp {
+impl Default for App {
   fn default() -> Self {
     let width = 400;
     let height = 300;
@@ -116,7 +116,7 @@ impl Default for TemplateApp {
   }
 }
 
-impl epi::App for TemplateApp {
+impl epi::App for App {
   fn name(&self) -> &str {
     "RSRayTracingV2"
   }
