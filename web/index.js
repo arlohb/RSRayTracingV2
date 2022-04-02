@@ -12,7 +12,7 @@ const renderImage = async () => {
   const egui = await import("../dist/pkg/rs_ray_tracing_v2.js");
 
   // effectively wasm.init();
-  await egui.default();
+  const memory = (await egui.default()).memory;
 
   console.log("Creating worker");
   const worker = new Worker(new URL("./wasm-worker.js", import.meta.url), {
@@ -23,7 +23,7 @@ const renderImage = async () => {
   link = Comlink.wrap(worker);
 
   console.log("Running worker");
-  await link.init();
+  await link.init(memory);
   await link.initThreadPool();
 
   const width = 400;

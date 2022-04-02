@@ -268,8 +268,8 @@ impl epi::App for TemplateApp {
       &JsValue::from_str(serde_json::to_string(&options).unwrap().as_str()),
     ).unwrap();
 
-    // crate::TEST.lock().unwrap().add();
-    // crate::log!("{}", crate::TEST.lock().unwrap().values.len());
+    crate::TEST.lock().unwrap().add();
+    crate::log!("Thread ID {}, TEST = {}", std::thread::current().id().as_u64(), crate::TEST.lock().unwrap().values.len());
 
     ctx.request_repaint();
   }

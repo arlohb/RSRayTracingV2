@@ -292,7 +292,7 @@ pub struct Options {
 #[wasm_bindgen]
 pub fn render_image (options: &str) -> String {
   // crate::TEST.lock().unwrap().add();
-  // crate::log!("TEST from worker: {}", crate::TEST.lock().unwrap().values.len());
+  crate::log!("Thread ID {}, TEST = {}", std::thread::current().id().as_u64(), crate::TEST.lock().unwrap().values.len());
 
   // return options.to_string();
   let options: Options = serde_json::from_str(options).expect("Failed to parse options");

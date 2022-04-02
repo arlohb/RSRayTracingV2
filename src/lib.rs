@@ -1,3 +1,5 @@
+#![feature(thread_id_value)]
+
 mod app;
 pub use app::TemplateApp;
 
