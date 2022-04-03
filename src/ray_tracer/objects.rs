@@ -90,6 +90,13 @@ impl Geometry {
     }
   }
 
+  pub fn position (&self) -> &Vec3 {
+    match self {
+      Geometry::Sphere { center, radius: _ } => center,
+      Geometry::Plane { center, normal: _, size: _ } => center,
+    }
+  }
+
   pub fn position_as_mut (&mut self) -> &mut Vec3 {
     match self {
       Geometry::Sphere { center, radius: _ } => center,

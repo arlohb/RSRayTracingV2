@@ -1,3 +1,4 @@
+use rand_distr::{UnitDisc, Distribution};
 use eframe::{egui, epi};
 use crate::{ray_tracer::*, panels::*, Time};
 
@@ -7,10 +8,68 @@ pub struct App {
   last_time: f64,
 }
 
-impl Default for App {
-  fn default() -> Self {
-    let width = 400;
-    let height = 300;
+impl App {
+  pub fn new(width: u32, height: u32) -> Self {
+    let min_radius: f64 = 3.;
+    let max_radius: f64 = 8.;
+    let placement_radius = 50.;
+    let random_sphere_count = 100;
+
+    let mut objects: Vec<Object> = vec![];
+
+    for i in 0..random_sphere_count {
+      // if it failed 100 times, then there's probably no space left
+      for _ in 0..100 {
+        let radius: f64 = rand::random::<f64>() * (max_radius - min_radius) + min_radius;
+        let [x, y]: [f64; 2] = UnitDisc.sample(&mut rand::thread_rng());
+        let x = x * placement_radius;
+        let y = y * placement_radius;
+        let position = Vec3 { x, y: radius, z: y };
+        
+        // reject spheres that are intersecting others
+        if objects.iter().any(|object| {
+          let other_radius = match object.geometry {
+            Geometry::Sphere { radius, .. } => radius,
+            _ => return false,
+          };
+          let min_dst = radius + other_radius;
+          (*object.geometry.position() - position).length() < min_dst
+        }) {
+          continue;
+        }
+
+        objects.push(Object {
+          name: i.to_string(),
+          material: Material {
+            colour: (rand::random(), rand::random(), rand::random()),
+            // some sort of distribution would be better here
+            specular: rand::random::<f64>() * 1000.,
+            metallic: if rand::random::<f64>() > 0.3 { rand::random() } else { 0. },
+          },
+          geometry: Geometry::Sphere {
+            center: position,
+            radius,
+          },
+        });
+
+        break;
+      }
+    }
+
+    objects.push(Object {
+      name: "plane".to_string(),
+      geometry: Geometry::Plane {
+        center: Vec3 { x: 0., y: 0., z: 0. },
+        normal: Vec3 { x: 0., y: 1., z: 0. },
+        size: 100000.,
+      },
+      material: Material {
+        colour: (0.5, 0.5, 0.5),
+        specular: 10.,
+        metallic: 0.2,
+      },
+    });
+  
     Self {
       ray_tracer: RayTracer {
         camera: Vec3 { x: 5., y: 5., z: 5. },
@@ -19,81 +78,7 @@ impl Default for App {
         width,
         height,
         scene: Scene {
-          objects: vec![
-            Object {
-                name: "sphere".to_string(),
-                material: Material {
-                    colour: (
-                        1.0,
-                        0.5212054252624512,
-                        0.0,
-                    ),
-                    specular: 5.0,
-                    metallic: 1.0,
-                },
-                geometry: Geometry::Sphere {
-                    center: Vec3 {
-                        x: 1.5,
-                        y: 0.0,
-                        z: 0.0,
-                    },
-                    radius: 1.0,
-                },
-            },
-            Object {
-                name: "sphere".to_string(),
-                material: Material {
-                    colour: (
-                        1.0,
-                        0.3486607074737549,
-                        0.0,
-                    ),
-                    specular: 800.0,
-                    metallic: 0.2,
-                },
-                geometry: Geometry::Sphere {
-                    center: Vec3 {
-                        x: 3.1,
-                        y: 0.0,
-                        z: 2.1,
-                    },
-                    radius: 1.0,
-                },
-            },
-            Object {
-                name: "sphere".to_string(),
-                material: Material {
-                    colour: (
-                        0.0,
-                        0.6445307731628418,
-                        1.0,
-                    ),
-                    specular: 80.0,
-                    metallic: 0.,
-                },
-                geometry: Geometry::Sphere {
-                    center: Vec3 {
-                        x: -8.3,
-                        y: 0.0,
-                        z: 0.0,
-                    },
-                    radius: 1.0,
-                },
-            },
-            Object {
-              name: "plane".to_string(),
-              material: Material {
-                colour: (0.8, 0.8, 1.),
-                specular: 50.,
-                metallic: 0.2,
-              },
-              geometry: Geometry::Plane {
-                center: Vec3 { x: 0., y: -1.5, z: 0. },
-                normal: Vec3 { x: 0., y: 1., z: 0. },
-                size: 5.,
-              },
-            },
-        ],
+          objects,
           lights: vec![
             Light::Direction {
               intensity: (0.4, 0.4, 0.4),

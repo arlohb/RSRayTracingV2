@@ -11,7 +11,7 @@ fn render_thread() {
 fn main() {
   thread::spawn(render_thread);
 
-  let app = rs_ray_tracing_v2::App::default();
+  let app = rs_ray_tracing_v2::App::new(400, 300);
   let native_options = eframe::NativeOptions {
     initial_window_size: Some(eframe::epaint::Vec2 { x: 1000., y: 800. }),
     ..eframe::NativeOptions::default()
