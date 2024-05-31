@@ -1,2 +1,9 @@
 [toolchain]
 channel = "nightly-2022-03-16"
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "wasm32-unknown-unknown"
+]
+# Needs to rebuild src with features in .cargo/config.toml
+# This is for wasm-bindgen-rayon
+components = [ "rust-src" ]
