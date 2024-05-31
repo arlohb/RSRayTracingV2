@@ -2,6 +2,10 @@
 
 A CPU ray tracer written in rust for both desktop and web.
 
+# Screenshots
+
+![Screenshot](./screenshots/screenshot.png)
+
 # Running
 
 ## Desktop
